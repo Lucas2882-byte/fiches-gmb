@@ -133,25 +133,28 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
+    
     if row[5]:
         urls = row[5].split(";")
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for url in urls:
                 try:
-                    img_data = requests.get(url).content
-                    filename = url.split("/")[-1].split("?")[0]
-                    zip_file.writestr(filename, img_data)
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        filename = url.split("/")[-1].split("?")[0]
+                        zip_file.writestr(filename, response.content)
                 except Exception as e:
-                    st.warning(f"Erreur téléchargement {url} : {e}")
-
+                    st.warning(f"❌ Erreur lors du téléchargement de {url} : {e}")
+        
         zip_buffer.seek(0)
         st.download_button(
             label="📦 Télécharger toutes les images",
             data=zip_buffer,
-            file_name=f"images_fiche_{row[0]}.zip",
+            file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
         )
+
     st.markdown(f"📅 Ajoutée le : {row[7]}")
     st.markdown(f"📌 Statut : {row[6]}")
     st.divider()
