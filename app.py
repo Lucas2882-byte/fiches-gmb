@@ -50,16 +50,22 @@ def upload_image_to_github(file, filename):
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
+
     get_resp = requests.get(f"{GITHUB_API_URL}/{filename}", headers=headers)
     sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
+
     payload = {
         "message": f"upload {filename}",
         "content": content,
         "branch": GITHUB_BRANCH
     }
+
     if sha:
         payload["sha"] = sha
+
     put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
+
+    # ✅ Ici on vérifie clairement le statut de l'upload
     if put_resp.status_code in [200, 201]:
         st.success(f"✅ Upload réussi sur GitHub : {filename}")
         return f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
@@ -68,12 +74,6 @@ def upload_image_to_github(file, filename):
         st.write("🧾 Réponse GitHub :", put_resp.status_code, put_resp.text)
         return None
 
-    if put_resp.status_code in [200, 201]:
-        return f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
-    else:
-        st.error("Erreur d'upload GitHub")
-        st.json(put_resp.json())
-        return None
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
