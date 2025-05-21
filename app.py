@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import sqlite3
 import base64
 import requests
@@ -11,7 +11,6 @@ st.set_page_config(page_title="Fiches GMB", layout="wide")
 DB_FILE = "fiches_gmb.db"
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 cursor = conn.cursor()
-
 
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
@@ -55,11 +54,11 @@ with st.form("form_ajout"):
             ville = st.text_input(f"Ville #{i+1}", key=f"ville_{i}")
             telephone = st.text_input(f"Téléphone #{i+1}", key=f"tel_{i}")
         with col2:
-            image = st.file_uploader(f"Image pour la fiche #{i+1}", type=["png", "jpg", "jpeg"], key=f"img_{i}")
+            images = st.file_uploader(f"Images pour la fiche #{i+1}", type=["png", "jpg", "jpeg"], key=f"img_{i}", accept_multiple_files=True)
         fiches.append({
             "ville": ville,
             "telephone": telephone,
-            "image": image
+            "images": images
         })
 
     submitted = st.form_submit_button("Ajouter les fiches")
@@ -67,17 +66,24 @@ with st.form("form_ajout"):
 if submitted:
     now = datetime.now().strftime("%Y-%m-%d")
     for fiche in fiches:
+        if not fiche["ville"] or not fiche["telephone"]:
+            st.warning("⚠️ Merci de remplir tous les champs obligatoires (ville et téléphone).")
+            continue
+
         nom = "à toi de choisir pour optimisation"
         adresse = "à toi de choisir pour optimisation"
-        image_url = ""
-        if fiche["image"] is not None:
-            safe_filename = f"{fiche['ville']}_{now.replace('-', '')}_{fiche['image'].name}"
-            url = upload_image_to_github(fiche["image"], safe_filename)
-            if url:
-                image_url = url
+        image_urls = []
+
+        if fiche["images"]:
+            for img_file in fiche["images"][:60]:  # Limit to 60 images max
+                safe_filename = f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}"
+                url = upload_image_to_github(img_file, safe_filename)
+                if url:
+                    image_urls.append(url)
+
         cursor.execute(
             "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, date_creation) VALUES (?, ?, ?, ?, ?, ?)",
-            (nom, fiche["ville"], adresse, fiche["telephone"], image_url, now)
+            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), now)
         )
     conn.commit()
     st.success("✅ Fiches ajoutées avec succès")
@@ -88,8 +94,10 @@ rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
     if row[5]:
-        image_name = row[5].split("/")[-1]
-        st.markdown(f"📎 [Télécharger l’image]({row[5]}) ({image_name})", unsafe_allow_html=True)
+        urls = row[5].split(";")
+        for url in urls:
+            image_name = url.split("/")[-1].split("?")[0]
+            st.markdown(f"📎 [Télécharger l’image]({url}) ({image_name})", unsafe_allow_html=True)
     st.markdown(f"📅 Ajoutée le : {row[7]}")
     st.markdown(f"📌 Statut : {row[6]}")
     st.divider()
