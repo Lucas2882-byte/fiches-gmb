@@ -12,6 +12,20 @@ DB_FILE = "fiches_gmb.db"
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 cursor = conn.cursor()
 
+# S'assurer que la table contient bien la colonne image_url si elle n'existe pas
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS fiches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    ville TEXT,
+    adresse TEXT,
+    telephone TEXT,
+    image_url TEXT,
+    statut TEXT DEFAULT 'à faire',
+    date_creation TEXT
+)
+""")
+conn.commit()
 
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
@@ -41,6 +55,26 @@ def upload_image_to_github(file, filename):
         st.error("Erreur d'upload GitHub")
         st.json(put_resp.json())
         return None
+
+# --- Upload DB to GitHub ---
+def upload_db_to_github():
+    with open(DB_FILE, "rb") as f:
+        content = base64.b64encode(f.read()).decode()
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    db_path = "fiches_gmb.db"
+    get_resp = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}", headers=headers)
+    sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
+    payload = {
+        "message": f"update {db_path}",
+        "content": content,
+        "branch": GITHUB_BRANCH
+    }
+    if sha:
+        payload["sha"] = sha
+    requests.put(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}", headers=headers, json=payload)
 
 # --- Interface ---
 st.title("📍 Ajouter plusieurs fiches GMB")
@@ -87,7 +121,10 @@ if submitted:
             (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now)
         )
     conn.commit()
+    upload_db_to_github()
+    rows_after = cursor.execute("SELECT COUNT(*) FROM fiches").fetchone()[0]
     st.success("✅ Fiches ajoutées avec succès")
+    st.info(f"📊 Total de fiches enregistrées : {rows_after}")
 
 # --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
