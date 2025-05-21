@@ -15,7 +15,7 @@ cursor = conn.cursor()
 
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
-GITHUB_REPO = "tonutilisateur/tondepot"
+GITHUB_REPO = "Lucas2882-byte/fiches-gmb"
 GITHUB_BRANCH = "main"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/images"
 
