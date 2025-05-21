@@ -6,8 +6,17 @@ import os
 from datetime import datetime
 import zipfile
 from io import BytesIO
+import re
+import unicodedata  # ← ajouté pour slugify
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
+
+# --- Fonction pour nettoyer les noms de fichiers ---
+def slugify(value):
+    value = str(value)
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    return re.sub(r'[-\s]+', '_', value)
 
 # --- Connexion à la base ---
 DB_FILE = "fiches_gmb.db"
@@ -113,7 +122,7 @@ if submitted:
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:  # Limit to 60 images max
-                safe_filename = f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}"
+                safe_filename = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}")  # 🔧 CHANGÉ ICI
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
@@ -149,7 +158,6 @@ for row in rows:
                     else:
                         st.warning(f"❌ Échec ou image vide : {url} (status {response.status_code})")
 
-    
         zip_buffer.seek(0)
         st.download_button(
             label="📦 Télécharger toutes les images de cette fiche",
