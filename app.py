@@ -146,6 +146,7 @@ if submitted:
     st.info(f"📊 Total de fiches enregistrées : {rows_after}")
 
 # --- Affichage ---
+# --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
@@ -153,23 +154,23 @@ for row in rows:
     
     if row[5]:
         urls = row[5].split(";")
-        st.write("🔗 Liens d'images enregistrés :", urls)
-
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for i, url in enumerate(urls):
                 try:
-                    st.write(f"📥 Téléchargement de : {url}")
-                    response = requests.get(url)
-                    st.write(f"🔍 Statut : {response.status_code}, Taille : {len(response.content)} octets")
+                    headers = {
+                        "User-Agent": "Mozilla/5.0"
+                    }
+                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                    ext = url.split(".")[-1].split("?")[0]
+                    filename = f"image_{i+1}.{ext}"
 
                     if response.status_code == 200 and len(response.content) > 0:
-                        ext = url.split(".")[-1].split("?")[0]
-                        filename = f"image_{i+1}.{ext}"
                         zip_file.writestr(filename, response.content)
-                        st.success(f"✅ Ajoutée au zip : {filename}")
+                        st.success(f"✅ {filename} ajouté ({len(response.content)} octets)")
                     else:
-                        st.warning(f"❌ Image introuvable ou vide : {url} (code {response.status_code})")
+                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+
                 except Exception as e:
                     st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
