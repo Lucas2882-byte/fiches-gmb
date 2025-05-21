@@ -145,18 +145,25 @@ for row in rows:
     
     if row[5]:
         urls = row[5].split(";")
+        st.write("🔗 Liens d'images enregistrés :", urls)
+
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for i, url in enumerate(urls):
                 try:
+                    st.write(f"📥 Téléchargement de : {url}")
                     response = requests.get(url)
+                    st.write(f"🔍 Statut : {response.status_code}, Taille : {len(response.content)} octets")
+
                     if response.status_code == 200 and len(response.content) > 0:
                         ext = url.split(".")[-1].split("?")[0]
-                        zip_file.writestr(f"image_{i+1}.{ext}", response.content)
+                        filename = f"image_{i+1}.{ext}"
+                        zip_file.writestr(filename, response.content)
+                        st.success(f"✅ Ajoutée au zip : {filename}")
                     else:
                         st.warning(f"❌ Image introuvable ou vide : {url} (code {response.status_code})")
                 except Exception as e:
-                    st.error(f"Erreur lors du téléchargement : {e}")
+                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
         zip_buffer.seek(0)
         st.download_button(
@@ -165,3 +172,4 @@ for row in rows:
             file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
         )
+
