@@ -146,7 +146,7 @@ for row in rows:
                         zip_file.writestr(filename, response.content)
                 except Exception as e:
                     st.warning(f"⚠️ Erreur sur {url} : {e}")
-
+    
         zip_buffer.seek(0)
         st.download_button(
             label="📦 Télécharger toutes les images de cette fiche",
@@ -154,7 +154,3 @@ for row in rows:
             file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
         )
-
-    st.markdown(f"📅 Ajoutée le : {row[7]}")
-    st.markdown(f"📌 Statut : {row[6]}")
-    st.divider()
