@@ -133,7 +133,6 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
-    
     if row[5]:
         urls = row[5].split(";")
         zip_buffer = BytesIO()
@@ -153,7 +152,6 @@ for row in rows:
             file_name=f"images_fiche_{row[0]}.zip",
             mime="application/zip"
         )
-
     st.markdown(f"📅 Ajoutée le : {row[7]}")
     st.markdown(f"📌 Statut : {row[6]}")
     st.divider()
