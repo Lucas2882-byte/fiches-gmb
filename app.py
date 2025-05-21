@@ -52,7 +52,7 @@ def upload_image_to_github(file, filename):
         payload["sha"] = sha
     put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
     if put_resp.status_code in [200, 201]:
-        return f"https://github.com/{GITHUB_REPO}/blob/{GITHUB_BRANCH}/images/{filename}?raw=true"
+        return f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
     else:
         st.error("Erreur d'upload GitHub")
         st.json(put_resp.json())
@@ -143,6 +143,8 @@ for row in rows:
                     filename = url.split("/")[-1].split("?")[0]
                     response = requests.get(url)
                     if response.status_code == 200:
+                        response = requests.get(url)
+                        st.write(url, response.status_code, len(response.content))
                         zip_file.writestr(filename, response.content)
                 except Exception as e:
                     st.warning(f"⚠️ Erreur sur {url} : {e}")
