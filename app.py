@@ -7,11 +7,11 @@ from datetime import datetime
 import zipfile
 from io import BytesIO
 import re
-import unicodedata  # ← nécessaire pour slugify
+import unicodedata  # ← requis pour slugify
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
-# --- Fonction pour noms de fichiers sûrs (sans accents ni espaces) ---
+# --- Fonction pour nettoyer les noms de fichiers (sans accents, espaces, etc.) ---
 def slugify(value):
     value = str(value)
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
@@ -122,10 +122,9 @@ if submitted:
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:  # Limit to 60 images max
-                safe_filename = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}")  # 🔧 CHANGÉ ICI
+                safe_filename = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}")  # ✅ safe name
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
-                    st.write("📸 URL à télécharger :", url)  # 🔍 Pour vérifier que les liens sont bons
                     image_urls.append(url)
 
         cursor.execute(
@@ -148,16 +147,16 @@ for row in rows:
         urls = row[5].split(";")
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-            for url in urls:
+            for i, url in enumerate(urls):
                 try:
-                    filename = url.split("/")[-1].split("?")[0]
-                    st.write("📸 URL à télécharger :", url)
                     response = requests.get(url)
                     if response.status_code == 200 and len(response.content) > 0:
-                        st.write(f"✅ Téléchargée : {filename} ({len(response.content)} octets)")
-                        zip_file.writestr(filename, response.content)
+                        ext = url.split(".")[-1].split("?")[0]
+                        zip_file.writestr(f"image_{i+1}.{ext}", response.content)
                     else:
-                        st.warning(f"❌ Échec ou image vide : {url} (status {response.status_code})")
+                        st.warning(f"❌ Image introuvable ou vide : {url} (code {response.status_code})")
+                except Exception as e:
+                    st.error(f"Erreur lors du téléchargement : {e}")
 
         zip_buffer.seek(0)
         st.download_button(
