@@ -55,13 +55,17 @@ with st.form("ajout_fiches_multiple"):
         st.markdown(f"### 📍 Fiche #{i+1}")
         col1, col2 = st.columns(2)
         with col1:
-            nom = st.text_input(f"Nom de la fiche #{i+1}", value="à toi de choisir pour optimisation", key=f"nom_{i}")
             ville = st.text_input(f"Ville #{i+1}", key=f"ville_{i}")
-            adresse = st.text_input(f"Adresse #{i+1}", value="à toi de choisir pour optimisation", key=f"adresse_{i}")
         with col2:
             telephone = st.text_input(f"Téléphone #{i+1}", key=f"tel_{i}")
             image_url = st.text_input(f"URL de l'image #{i+1}", key=f"img_{i}")
-        fiches_data.append((nom, ville, adresse, telephone, image_url))
+        fiches.append({
+            "nom": "à toi de choisir pour optimisation",
+            "ville": ville,
+            "adresse": "à toi de choisir pour optimisation",
+            "telephone": telephone,
+            "image_url": image_url
+        })
 
     submitted = st.form_submit_button("Ajouter les fiches")
     if submitted:
