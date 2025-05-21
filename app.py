@@ -12,19 +12,6 @@ DB_FILE = "fiches_gmb.db"
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS fiches (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    ville TEXT,
-    adresse TEXT,
-    telephone TEXT,
-    image_url TEXT,
-    statut TEXT DEFAULT 'À faire',
-    date_creation TEXT
-)
-""")
-conn.commit()
 
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
