@@ -4,6 +4,8 @@ import base64
 import requests
 import os
 from datetime import datetime
+import zipfile
+from io import BytesIO
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
@@ -131,11 +133,27 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
+    
     if row[5]:
         urls = row[5].split(";")
-        for url in urls:
-            image_name = url.split("/")[-1].split("?")[0]
-            st.markdown(f"📎 [Télécharger l’image]({url}) ({image_name})", unsafe_allow_html=True)
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for url in urls:
+                try:
+                    img_data = requests.get(url).content
+                    filename = url.split("/")[-1].split("?")[0]
+                    zip_file.writestr(filename, img_data)
+                except Exception as e:
+                    st.warning(f"Erreur téléchargement {url} : {e}")
+
+        zip_buffer.seek(0)
+        st.download_button(
+            label="📦 Télécharger toutes les images",
+            data=zip_buffer,
+            file_name=f"images_fiche_{row[0]}.zip",
+            mime="application/zip"
+        )
+
     st.markdown(f"📅 Ajoutée le : {row[7]}")
     st.markdown(f"📌 Statut : {row[6]}")
     st.divider()
