@@ -36,7 +36,7 @@ def upload_image_to_github(file, filename):
         payload["sha"] = sha
     put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
     if put_resp.status_code in [200, 201]:
-        return f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
+        return f"https://github.com/{GITHUB_REPO}/blob/{GITHUB_BRANCH}/images/{filename}?raw=true"
     else:
         st.error("Erreur d'upload GitHub")
         st.json(put_resp.json())
