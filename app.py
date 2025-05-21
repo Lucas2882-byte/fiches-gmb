@@ -7,11 +7,11 @@ from datetime import datetime
 import zipfile
 from io import BytesIO
 import re
-import unicodedata  # ← ajouté pour slugify
+import unicodedata  # ← nécessaire pour slugify
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
-# --- Fonction pour nettoyer les noms de fichiers ---
+# --- Fonction pour noms de fichiers sûrs (sans accents ni espaces) ---
 def slugify(value):
     value = str(value)
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
@@ -125,6 +125,7 @@ if submitted:
                 safe_filename = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}")  # 🔧 CHANGÉ ICI
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
+                    st.write("📸 URL à télécharger :", url)  # 🔍 Pour vérifier que les liens sont bons
                     image_urls.append(url)
 
         cursor.execute(
