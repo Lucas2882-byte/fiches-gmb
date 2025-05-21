@@ -12,6 +12,7 @@ DB_FILE = "fiches_gmb.db"
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 cursor = conn.cursor()
 
+
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
 GITHUB_REPO = "Lucas2882-byte/fiches-gmb"
@@ -82,8 +83,8 @@ if submitted:
                     image_urls.append(url)
 
         cursor.execute(
-            "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, date_creation) VALUES (?, ?, ?, ?, ?, ?)",
-            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), now)
+            "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now)
         )
     conn.commit()
     st.success("✅ Fiches ajoutées avec succès")
