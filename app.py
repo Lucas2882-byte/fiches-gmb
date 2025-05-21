@@ -143,13 +143,12 @@ for row in rows:
                     filename = url.split("/")[-1].split("?")[0]
                     st.write("📸 URL à télécharger :", url)
                     response = requests.get(url)
-                    if response.status_code == 200:
-                        response = requests.get(url)
-                        st.write("✅ Status", response.status_code, "Taille:", len(response.content))
-                        st.write(url, response.status_code, len(response.content))
+                    if response.status_code == 200 and len(response.content) > 0:
+                        st.write(f"✅ Téléchargée : {filename} ({len(response.content)} octets)")
                         zip_file.writestr(filename, response.content)
-                except Exception as e:
-                    st.warning(f"⚠️ Erreur sur {url} : {e}")
+                    else:
+                        st.warning(f"❌ Échec ou image vide : {url} (status {response.status_code})")
+
     
         zip_buffer.seek(0)
         st.download_button(
