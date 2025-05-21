@@ -140,16 +140,16 @@ for row in rows:
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for url in urls:
                 try:
+                    filename = url.split("/")[-1].split("?")[0]
                     response = requests.get(url)
                     if response.status_code == 200:
-                        filename = url.split("/")[-1].split("?")[0]
                         zip_file.writestr(filename, response.content)
                 except Exception as e:
-                    st.warning(f"❌ Erreur lors du téléchargement de {url} : {e}")
-        
+                    st.warning(f"⚠️ Erreur sur {url} : {e}")
+
         zip_buffer.seek(0)
         st.download_button(
-            label="📦 Télécharger toutes les images",
+            label="📦 Télécharger toutes les images de cette fiche",
             data=zip_buffer,
             file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
