@@ -173,20 +173,20 @@ for statut in ["à faire", "en cours", "terminé"]:
 
             with col_right:
                 fiche_id = row[0]
-                fiche_creee = st.checkbox("🆕 Création de la fiche", value=bool(row[8]), key=f"fiche_creee_{fiche_id}")
-                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=bool(row[9]), key=f"tel_ajoute_{fiche_id}")
-                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=bool(row[10]), key=f"photos_ajoutees_{fiche_id}")
-                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=bool(row[11]), key=f"site_web_ajoute_{fiche_id}")
+                creation_fiche = st.checkbox("🆕 Création de la fiche", value=bool(row[13]), key=f"creation_fiche_{fiche_id}")
+                ajout_numero = st.checkbox("📞 Ajout du numéro", value=bool(row[14]), key=f"ajout_numero_{fiche_id}")
+                ajout_photos = st.checkbox("🖼️ Ajout des photos", value=bool(row[15]), key=f"ajout_photos_{fiche_id}")
+                ajout_site = st.checkbox("🌐 Ajout du site internet", value=bool(row[16]), key=f"ajout_site_{fiche_id}")
                 
-                # Bouton de sauvegarde
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                     cursor.execute("""
                         UPDATE fiches
-                        SET fiche_creee = ?, tel_ajoute = ?, photos_ajoutees = ?, site_web_ajoute = ?
+                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
                         WHERE id = ?
-                    """, (int(fiche_creee), int(tel_ajoute), int(photos_ajoutees), int(site_web_ajoute), fiche_id))
+                    """, (int(creation_fiche), int(ajout_numero), int(ajout_photos), int(ajout_site), fiche_id))
                     conn.commit()
                     st.success("✅ État mis à jour avec succès.")
+
 
                 if row[5]:
                     urls = row[5].split(";")
