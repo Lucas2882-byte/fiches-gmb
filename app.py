@@ -149,22 +149,28 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 stats = {"à faire": [], "en cours": [], "terminé": []}
 for row in rows:
-    statut_fiche = row[6] if row[6] in stats else "à faire"
-    stats[statut_fiche].append(row)
-
+    stats[row[6]].append(row)
 
 for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
             with st.container():
                 st.markdown(f"""
-                <div style='padding: 10px; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 10px; background-color: #111;'>
-                    <strong>Nom :</strong> {row[1]}<br>
-                    <strong>Ville :</strong> {row[2]}<br>
-                    <strong>Adresse :</strong> {row[3]}<br>
-                    <strong>Téléphone :</strong> {row[4]}<br>
-                    <strong>Date :</strong> {row[7]}<br>
-                    <strong>Statut :</strong> {row[6]}<br>
+                <div style='
+                    padding: 18px;
+                    border: 1px solid #444;
+                    border-radius: 10px;
+                    margin-bottom: 15px;
+                    background-color: #1a1a1a;
+                    color: #f1f1f1;
+                    font-size: 15px;
+                '>
+                    <p>📛 <strong>Nom :</strong> {row[1]}</p>
+                    <p>🏙️ <strong>Ville :</strong> {row[2]}</p>
+                    <p>📍 <strong>Adresse :</strong> {row[3]}</p>
+                    <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
+                    <p>📌 <strong>Statut :</strong> {row[6].capitalize()}</p>
+                    <p>🗓️ <strong>Date d'ajout :</strong> {row[7]}</p>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -174,9 +180,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
                         for i, url in enumerate(urls):
                             try:
-                                headers = {
-                                    "User-Agent": "Mozilla/5.0"
-                                }
+                                headers = {"User-Agent": "Mozilla/5.0"}
                                 response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
                                 ext = url.split(".")[-1].split("?")[0]
                                 filename = f"image_{i+1}.{ext}"
@@ -185,7 +189,6 @@ for statut in ["à faire", "en cours", "terminé"]:
                                     zip_file.writestr(filename, response.content)
                                 else:
                                     st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
-
                             except Exception as e:
                                 st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
@@ -196,3 +199,4 @@ for statut in ["à faire", "en cours", "terminé"]:
                         file_name=f"fiche_{row[0]}_images.zip",
                         mime="application/zip"
                     )
+
