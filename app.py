@@ -93,6 +93,7 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Ajouter plusieurs fiches GMB")
+numero_client = st.text_input("🔢 Numéro du client (valable pour toutes les fiches)")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
 
 fiches = []
