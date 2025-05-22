@@ -149,7 +149,9 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 stats = {"à faire": [], "en cours": [], "terminé": []}
 for row in rows:
-    stats[row[6]].append(row)
+    statut_fiche = row[6] if row[6] in stats else "à faire"
+    stats[statut_fiche].append(row)
+
 
 for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
