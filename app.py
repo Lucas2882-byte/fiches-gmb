@@ -149,8 +149,8 @@ st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 stats = {"à faire": [], "en cours": [], "terminé": []}
 for row in rows:
-    if row[6] in stats:
-        stats[row[6]].append(row)
+    if row[7] in stats:
+        stats[row[7]].append(row)
     else:
         stats["à faire"].append(row)  # 🔁 fallback pour les valeurs inattendues
 
