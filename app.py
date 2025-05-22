@@ -172,10 +172,21 @@ for statut in ["à faire", "en cours", "terminé"]:
                 """, unsafe_allow_html=True)
 
             with col_right:
-                st.checkbox("🆕 Création de la fiche", value=True, disabled=True)
-                st.checkbox("📞 Ajout du numéro", value=bool(row[4]), disabled=True)
-                st.checkbox("🖼️ Ajout des photos", value=bool(row[5]), disabled=True)
-                st.checkbox("🌐 Ajout du site internet", value=False, disabled=True)  # À adapter plus tard
+                fiche_id = row[0]
+                fiche_creee = st.checkbox("🆕 Création de la fiche", value=bool(row[8]), key=f"fiche_creee_{fiche_id}")
+                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=bool(row[9]), key=f"tel_ajoute_{fiche_id}")
+                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=bool(row[10]), key=f"photos_ajoutees_{fiche_id}")
+                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=bool(row[11]), key=f"site_web_ajoute_{fiche_id}")
+                
+                # Bouton de sauvegarde
+                if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
+                    cursor.execute("""
+                        UPDATE fiches
+                        SET fiche_creee = ?, tel_ajoute = ?, photos_ajoutees = ?, site_web_ajoute = ?
+                        WHERE id = ?
+                    """, (int(fiche_creee), int(tel_ajoute), int(photos_ajoutees), int(site_web_ajoute), fiche_id))
+                    conn.commit()
+                    st.success("✅ État mis à jour avec succès.")
 
                 if row[5]:
                     urls = row[5].split(";")
