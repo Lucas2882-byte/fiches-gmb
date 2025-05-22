@@ -175,10 +175,11 @@ for statut in ["à faire", "en cours", "terminé"]:
                 fiche_id = row[0]
 
                 # Cases à cocher interactives (initialisées à 0 ou 1 depuis la BDD)
-                fiche_creee = st.checkbox("🆕 Création de la fiche", value=bool(row[8]), key=f"fiche_creee_{fiche_id}")
-                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=bool(row[9]), key=f"tel_ajoute_{fiche_id}")
-                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=bool(row[10]), key=f"photos_ajoutees_{fiche_id}")
-                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=bool(row[11]), key=f"site_web_ajoute_{fiche_id}")
+                fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
+                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
+                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
+                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
+
                 
                 # Bouton de sauvegarde qui met à jour la BDD locale + GitHub
                 # ✅ Calcul de l'avancement
