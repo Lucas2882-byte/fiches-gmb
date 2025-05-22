@@ -140,11 +140,12 @@ if submitted:
         image_urls = []
 
         if fiche["images"]:
-            for img_file in fiche["images"][:60]:  # Limit to 60 images max
-                name, ext = os.path.splitext(img_file.name)         # 🔍 Sépare le nom et l'extension (.jpg, .png)
-                ext = ext.lower().replace(".", "")                  # 🔧 Nettoie l'extension
-                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")  # 🧼 Slugifie juste le nom
-                safe_filename = f"{base_name}.{ext}"                # 🔗 Recompose proprement le nom complet
+            for img_file in fiche["images"][:60]:
+                name, ext = os.path.splitext(img_file.name)        # Sépare nom + extension
+                ext = ext.lower().replace(".", "")                 # Enlève le point uniquement
+                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")
+                safe_filename = f"{base_name}.{ext}"               # Reconstruit le nom propre
+                st.write(f"🧪 Fichier final : {safe_filename}")     # <-- Debug pour vérifier visuellement
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
