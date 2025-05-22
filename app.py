@@ -65,6 +65,7 @@ def upload_image_to_github(file, filename):
     put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
 
     if put_resp.status_code in [200, 201]:
+        st.success(f"✅ Upload réussi sur GitHub : {filename}")
         raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
         return raw_url
     else:
