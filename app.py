@@ -173,39 +173,30 @@ for statut in ["à faire", "en cours", "terminé"]:
 
             with col_right:
                 fiche_id = row[0]
-                checkbox_prefix = f"fiche_{fiche_id}"
+
+                # Cases à cocher interactives (initialisées à 0 ou 1 depuis la BDD)
+                fiche_creee = st.checkbox("🆕 Création de la fiche", value=bool(row[8]), key=f"fiche_creee_{fiche_id}")
+                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=bool(row[9]), key=f"tel_ajoute_{fiche_id}")
+                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=bool(row[10]), key=f"photos_ajoutees_{fiche_id}")
+                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=bool(row[11]), key=f"site_web_ajoute_{fiche_id}")
                 
-                # Initialiser les valeurs dans session_state si pas encore fait
-                for key, db_index in {
-                    "creation_fiche": 13,
-                    "ajout_numero": 14,
-                    "ajout_photos": 15,
-                    "ajout_site": 16
-                }.items():
-                    if f"{checkbox_prefix}_{key}" not in st.session_state:
-                        st.session_state[f"{checkbox_prefix}_{key}"] = bool(row[db_index])
-                
-                # Afficher les cases à cocher
-                creation_fiche = st.checkbox("🆕 Création de la fiche", key=f"{checkbox_prefix}_creation_fiche")
-                ajout_numero = st.checkbox("📞 Ajout du numéro", key=f"{checkbox_prefix}_ajout_numero")
-                ajout_photos = st.checkbox("🖼️ Ajout des photos", key=f"{checkbox_prefix}_ajout_photos")
-                ajout_site = st.checkbox("🌐 Ajout du site internet", key=f"{checkbox_prefix}_ajout_site")
-                
-                # Sauvegarde des modifications
+                # Bouton de sauvegarde qui met à jour la BDD locale + GitHub
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                     cursor.execute("""
                         UPDATE fiches
                         SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
                         WHERE id = ?
                     """, (
-                        int(st.session_state[f"{checkbox_prefix}_creation_fiche"]),
-                        int(st.session_state[f"{checkbox_prefix}_ajout_numero"]),
-                        int(st.session_state[f"{checkbox_prefix}_ajout_photos"]),
-                        int(st.session_state[f"{checkbox_prefix}_ajout_site"]),
+                        int(fiche_creee),
+                        int(tel_ajoute),
+                        int(photos_ajoutees),
+                        int(site_web_ajoute),
                         fiche_id
                     ))
                     conn.commit()
+                    upload_db_to_github()
                     st.success("✅ État mis à jour avec succès.")
+
 
 
 
