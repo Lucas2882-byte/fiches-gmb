@@ -162,49 +162,39 @@ for statut in ["à faire", "en cours", "terminé"]:
             with col_left:
                 st.markdown(f"""
                 <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
-                    <p>📄 <strong>Nom :</strong> {row[1]}</p>
-                    <p>🏙️ <strong>Ville :</strong> {row[2]}</p>
+                    <p>📄 <strong>Nom :</strong> {row[2]}</p>
+                    <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
                     <p>📌 <strong>Statut :</strong> {row[7]}</p>
                     <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
                 </div>
                 """, unsafe_allow_html=True)
-
+            
             with col_right:
                 fiche_id = row[0]
-
-                # Cases à cocher interactives (initialisées à 0 ou 1 depuis la BDD)
+            
+                # ✅ Affichage correct avec état vrai ou faux depuis la BDD
                 fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
                 tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
                 photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
                 site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
-
-                
-                # Bouton de sauvegarde qui met à jour la BDD locale + GitHub
+            
                 # ✅ Calcul de l'avancement
                 total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
                 progress_percent = int((total_checked / 4) * 100)
-                
-                # 🎯 Affichage clair de l'état
-                if progress_percent < 50:
-                    bar_color = "red"
-                elif progress_percent < 100:
-                    bar_color = "orange"
-                else:
-                    bar_color = "green"
-                
-                # 📊 Titre + barre de progression personnalisée
+            
                 st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                 st.progress(progress_percent)
-
+            
+                # ✅ Bouton pour enregistrer les cases actuelles (0 ou 1)
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                     cursor.execute("""
                         UPDATE fiches
                         SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
                         WHERE id = ?
                     """, (
-                        int(fiche_creee),
+                        int(fiche_creee),   # 1 si coché, 0 si décoché
                         int(tel_ajoute),
                         int(photos_ajoutees),
                         int(site_web_ajoute),
@@ -213,6 +203,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     conn.commit()
                     upload_db_to_github()
                     st.success("✅ État mis à jour avec succès.")
+
 
 
 
