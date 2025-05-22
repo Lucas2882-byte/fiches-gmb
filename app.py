@@ -45,15 +45,35 @@ GITHUB_REPO = "Lucas2882-byte/fiches-gmb"
 GITHUB_BRANCH = "main"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/images"
 
+import time  # à mettre tout en haut du fichier si ce n’est pas encore importé
+
 def upload_image_to_github(file, filename):
-    ...
+    content = base64.b64encode(file.read()).decode()
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    get_resp = requests.get(f"{GITHUB_API_URL}/{filename}", headers=headers)
+    sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
+
+    payload = {
+        "message": f"upload {filename}",
+        "content": content,
+        "branch": GITHUB_BRANCH
+    }
+    if sha:
+        payload["sha"] = sha
+
+    put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
+
     if put_resp.status_code in [200, 201]:
         raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
 
-        # 🔁 Attendre que GitHub rende le fichier dispo (timeout max 10s)
+        # 🔁 Attendre que le lien raw fonctionne (jusqu'à 10s)
         for _ in range(10):
             check = requests.get(raw_url)
-            if check.status_code == 200:
+            if check.status_code == 200 and len(check.content) > 0:
                 break
             time.sleep(1)
 
@@ -63,6 +83,7 @@ def upload_image_to_github(file, filename):
         st.error(f"❌ Upload échoué pour : {filename}")
         st.code(put_resp.text)
         return None
+
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
