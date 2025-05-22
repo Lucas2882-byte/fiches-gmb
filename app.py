@@ -212,6 +212,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     conn.commit()
                     upload_db_to_github()
                     st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
+                    st.experimental_rerun()
 
 
 
