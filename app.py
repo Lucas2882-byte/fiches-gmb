@@ -65,8 +65,8 @@ def upload_image_to_github(file, filename):
     put_resp = requests.put(f"{GITHUB_API_URL}/{filename}", headers=headers, json=payload)
 
     if put_resp.status_code in [200, 201]:
-        st.success(f"✅ Upload réussi sur GitHub : {filename}")
         raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
+        st.success(f"✅ Upload réussi sur GitHub : {filename}")
         return raw_url
     else:
         return None
@@ -147,32 +147,40 @@ if submitted:
 # --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
+stats = {"à faire": [], "en cours": [], "terminé": []}
 for row in rows:
-    st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
+    stats[row[6]].append(row)
 
-    if row[5]:
-        urls = row[5].split(";")
-        zip_buffer = BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-            for i, url in enumerate(urls):
-                try:
-                    headers = {
-                        "User-Agent": "Mozilla/5.0"
-                    }
-                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                    ext = url.split(".")[-1].split("?")[0]
-                    filename = f"image_{i+1}.{ext}"
+for statut in ["à faire", "en cours", "terminé"]:
+    with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
+        for row in stats[statut]:
+            st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
 
-                    if response.status_code == 200 and len(response.content) > 0:
-                        zip_file.writestr(filename, response.content)
+            if row[5]:
+                urls = row[5].split(";")
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                    for i, url in enumerate(urls):
+                        try:
+                            headers = {
+                                "User-Agent": "Mozilla/5.0"
+                            }
+                            response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                            ext = url.split(".")[-1].split("?")[0]
+                            filename = f"image_{i+1}.{ext}"
 
-                except Exception as e:
-                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+                            if response.status_code == 200 and len(response.content) > 0:
+                                zip_file.writestr(filename, response.content)
+                            else:
+                                st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
 
-        zip_buffer.seek(0)
-        st.download_button(
-            label="📦 Télécharger toutes les images de cette fiche",
-            data=zip_buffer,
-            file_name=f"fiche_{row[0]}_images.zip",
-            mime="application/zip"
-        )
+                        except Exception as e:
+                            st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+
+                zip_buffer.seek(0)
+                st.download_button(
+                    label="📦 Télécharger toutes les images de cette fiche",
+                    data=zip_buffer,
+                    file_name=f"fiche_{row[0]}_images.zip",
+                    mime="application/zip"
+                )
