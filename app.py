@@ -154,33 +154,43 @@ for row in rows:
 for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
-            st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
+            with st.container():
+                st.markdown(f"""
+                <div style='padding: 10px; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 10px; background-color: #111;'>
+                    <strong>Nom :</strong> {row[1]}<br>
+                    <strong>Ville :</strong> {row[2]}<br>
+                    <strong>Adresse :</strong> {row[3]}<br>
+                    <strong>Téléphone :</strong> {row[4]}<br>
+                    <strong>Date :</strong> {row[7]}<br>
+                    <strong>Statut :</strong> {row[6]}<br>
+                </div>
+                """, unsafe_allow_html=True)
 
-            if row[5]:
-                urls = row[5].split(";")
-                zip_buffer = BytesIO()
-                with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-                    for i, url in enumerate(urls):
-                        try:
-                            headers = {
-                                "User-Agent": "Mozilla/5.0"
-                            }
-                            response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                            ext = url.split(".")[-1].split("?")[0]
-                            filename = f"image_{i+1}.{ext}"
+                if row[5]:
+                    urls = row[5].split(";")
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                        for i, url in enumerate(urls):
+                            try:
+                                headers = {
+                                    "User-Agent": "Mozilla/5.0"
+                                }
+                                response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                                ext = url.split(".")[-1].split("?")[0]
+                                filename = f"image_{i+1}.{ext}"
 
-                            if response.status_code == 200 and len(response.content) > 0:
-                                zip_file.writestr(filename, response.content)
-                            else:
-                                st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+                                if response.status_code == 200 and len(response.content) > 0:
+                                    zip_file.writestr(filename, response.content)
+                                else:
+                                    st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
 
-                        except Exception as e:
-                            st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+                            except Exception as e:
+                                st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
-                zip_buffer.seek(0)
-                st.download_button(
-                    label="📦 Télécharger toutes les images de cette fiche",
-                    data=zip_buffer,
-                    file_name=f"fiche_{row[0]}_images.zip",
-                    mime="application/zip"
-                )
+                    zip_buffer.seek(0)
+                    st.download_button(
+                        label="📦 Télécharger toutes les images de cette fiche",
+                        data=zip_buffer,
+                        file_name=f"fiche_{row[0]}_images.zip",
+                        mime="application/zip"
+                    )
