@@ -73,36 +73,23 @@ def upload_image_to_github(file, filename):
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
-    db_path = "fiches_gmb.db"
-    with open(db_path, "rb") as f:
+    with open(DB_FILE, "rb") as f:
         content = base64.b64encode(f.read()).decode()
-
     headers = {
-        "Authorization": f"Bearer " + GITHUB_TOKEN,
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
-
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}"
-    get_resp = requests.get(url, headers=headers)
+    db_path = "fiches_gmb.db"
+    get_resp = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}", headers=headers)
     sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
-
     payload = {
-        "message": "update fiches_gmb.db",
+        "message": f"update {db_path}",
         "content": content,
         "branch": GITHUB_BRANCH
     }
     if sha:
         payload["sha"] = sha
-
-    put_resp = requests.put(url, headers=headers, json=payload)
-
-    if put_resp.status_code in [200, 201]:
-        st.success("📤 Fichier .db envoyé sur GitHub avec succès.")
-    else:
-        st.error("❌ Échec d’envoi sur GitHub")
-        st.code(put_resp.text)
-
-
+    requests.put(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}", headers=headers, json=payload)
 
 # --- Interface ---
 st.title("📍 Ajouter plusieurs fiches GMB")
@@ -229,8 +216,6 @@ for statut in ["à faire", "en cours", "terminé"]:
 
 
 
-
-
                 if row[5]:
                     urls = row[5].split(";")
                     zip_buffer = BytesIO()
@@ -256,4 +241,3 @@ for statut in ["à faire", "en cours", "terminé"]:
                         file_name=f"fiche_{row[0]}_images.zip",
                         mime="application/zip"
                     )
-
