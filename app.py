@@ -172,8 +172,9 @@ for statut in ["à faire", "en cours", "terminé"]:
                     <p>🏙️ <strong>Ville :</strong> {row[2]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
-                    <p>📌 <strong>Statut :</strong> {row[6].capitalize()}</p>
+                    <p>📌 <strong>Statut :</strong> {row[6]}</p>
                     <p>🗓️ <strong>Date d'ajout :</strong> {row[7]}</p>
+
                 </div>
                 """, unsafe_allow_html=True)
 
