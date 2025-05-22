@@ -211,28 +211,19 @@ for statut in ["à faire", "en cours", "terminé"]:
                 st.progress(progress_percent)
 
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
-                    nouveau_statut = "en cours" if fiche_creee else row[7]
-                
                     cursor.execute("""
                         UPDATE fiches
-                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
+                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
                         WHERE id = ?
                     """, (
                         int(fiche_creee),
                         int(tel_ajoute),
                         int(photos_ajoutees),
                         int(site_web_ajoute),
-                        nouveau_statut,
                         fiche_id
                     ))
                     conn.commit()
-                
-                    # 🔁 forcer une tentative propre d'envoi
-                    try:
-                        upload_db_to_github()
-                    except Exception as e:
-                        st.warning(f"⚠️ Upload GitHub échoué : {e}")
-                
+                    upload_db_to_github()
                     st.success("✅ État mis à jour avec succès.")
 
 
