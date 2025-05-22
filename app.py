@@ -1,4 +1,4 @@
-""import streamlit as st 
+import streamlit as st 
 import sqlite3
 import base64
 import requests
@@ -165,8 +165,6 @@ for row in rows:
 
                     if response.status_code == 200 and len(response.content) > 0:
                         zip_file.writestr(filename, response.content)
-                    else:
-                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
 
                 except Exception as e:
                     st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
