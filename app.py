@@ -158,6 +158,7 @@ for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
             col_left, col_right = st.columns([3, 1])
+            # Dictionnaire de mois en français
             mois_fr = {
                 "01": "janvier", "02": "février", "03": "mars", "04": "avril",
                 "05": "mai", "06": "juin", "07": "juillet", "08": "août",
@@ -174,13 +175,9 @@ for statut in ["à faire", "en cours", "terminé"]:
             
             date_creation_str = date_en_fr(date_creation)
             date_fin_str = date_en_fr(date_fin)
-
-            with col_left:
-                # Calcul de la date de fin (date ajout + 30j)
-                date_creation = datetime.strptime(row[6], "%Y-%m-%d")
-                date_fin = date_creation + timedelta(days=30)
-                date_fin_str = date_fin.strftime("%Y-%m-%d")
             
+            # Affichage Streamlit
+            with col_left:
                 st.markdown(f"""
                 <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
                     <p>📄 <strong>Nom :</strong> {row[2]}</p>
@@ -188,11 +185,10 @@ for statut in ["à faire", "en cours", "terminé"]:
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
                     <p>📌 <strong>Statut :</strong> {row[7]}</p>
-                    <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
+                    <p>📅 <strong>Date d'ajout :</strong> {date_creation_str}</p>
                     <p style='color: #ff4444;'>🛑 <strong>Date de fin :</strong> {date_fin_str}</p>
                 </div>
                 """, unsafe_allow_html=True)
-
 
             
             with col_right:
