@@ -158,6 +158,22 @@ for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
             col_left, col_right = st.columns([3, 1])
+            mois_fr = {
+                "01": "janvier", "02": "février", "03": "mars", "04": "avril",
+                "05": "mai", "06": "juin", "07": "juillet", "08": "août",
+                "09": "septembre", "10": "octobre", "11": "novembre", "12": "décembre"
+            }
+            
+            # Convertir date ajout + calcul date de fin
+            date_creation = datetime.strptime(row[6], "%Y-%m-%d")
+            date_fin = date_creation + timedelta(days=30)
+            
+            # Formater en "21 mai 2025"
+            def date_en_fr(dt):
+                return f"{dt.day} {mois_fr[dt.strftime('%m')]} {dt.year}"
+            
+            date_creation_str = date_en_fr(date_creation)
+            date_fin_str = date_en_fr(date_fin)
 
             with col_left:
                 # Calcul de la date de fin (date ajout + 30j)
