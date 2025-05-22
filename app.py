@@ -181,6 +181,22 @@ for statut in ["à faire", "en cours", "terminé"]:
                 site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=bool(row[11]), key=f"site_web_ajoute_{fiche_id}")
                 
                 # Bouton de sauvegarde qui met à jour la BDD locale + GitHub
+                # ✅ Calcul de l'avancement
+                total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
+                progress_percent = int((total_checked / 4) * 100)
+                
+                # 🎯 Affichage clair de l'état
+                if progress_percent < 50:
+                    bar_color = "red"
+                elif progress_percent < 100:
+                    bar_color = "orange"
+                else:
+                    bar_color = "green"
+                
+                # 📊 Titre + barre de progression personnalisée
+                st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
+                st.progress(progress_percent)
+
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                     cursor.execute("""
                         UPDATE fiches
