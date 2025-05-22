@@ -73,39 +73,35 @@ def upload_image_to_github(file, filename):
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
-    with open(DB_FILE, "rb") as f:
+    db_path = "fiches_gmb.db"
+    with open(db_path, "rb") as f:
         content = base64.b64encode(f.read()).decode()
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Authorization": f"Bearer " + GITHUB_TOKEN,
         "Accept": "application/vnd.github.v3+json"
     }
 
-    # 🔁 Forcer récupération du dernier sha
-    db_path = "fiches_gmb.db"
-    sha_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}"
-    sha_resp = requests.get(sha_url, headers=headers)
-
-    sha = None
-    if sha_resp.status_code == 200:
-        sha = sha_resp.json().get("sha")
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}"
+    get_resp = requests.get(url, headers=headers)
+    sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
 
     payload = {
-        "message": f"update {db_path}",
+        "message": "update fiches_gmb.db",
         "content": content,
         "branch": GITHUB_BRANCH
     }
     if sha:
         payload["sha"] = sha
 
-    # 🔄 Upload définitif
-    put_resp = requests.put(sha_url, headers=headers, json=payload)
+    put_resp = requests.put(url, headers=headers, json=payload)
 
     if put_resp.status_code in [200, 201]:
         st.success("📤 Fichier .db envoyé sur GitHub avec succès.")
     else:
-        st.error(f"❌ Échec upload .db GitHub : {put_resp.status_code}")
+        st.error("❌ Échec d’envoi sur GitHub")
         st.code(put_resp.text)
+
 
 
 # --- Interface ---
