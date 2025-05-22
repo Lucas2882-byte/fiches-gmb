@@ -9,6 +9,7 @@ from io import BytesIO
 import re
 import unicodedata  # ← requis pour slugify
 import time
+import os
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
@@ -140,11 +141,13 @@ if submitted:
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:  # Limit to 60 images max
-                safe_filename = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{img_file.name}")  # ✅ safe name
+                name, ext = os.path.splitext(img_file.name)         # 🔍 Sépare le nom et l'extension (.jpg, .png)
+                ext = ext.lower().replace(".", "")                  # 🔧 Nettoie l'extension
+                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")  # 🧼 Slugifie juste le nom
+                safe_filename = f"{base_name}.{ext}"                # 🔗 Recompose proprement le nom complet
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
-                    st.write("🔗 URL sauvegardée :", url)
 
         cursor.execute(
             "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation) VALUES (?, ?, ?, ?, ?, ?, ?)",
