@@ -181,18 +181,23 @@ for row in rows:
                     headers = {
                         "User-Agent": "Mozilla/5.0"
                     }
-                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                    ext = url.split(".")[-1].split("?")[0]
-                    filename = f"image_{i+1}.{ext}"
-
-                    if response.status_code == 200 and len(response.content) > 0:
+                    # 🔁 Attente active max 10 secondes si l'image n'est pas encore dispo
+                    success = False
+                    for attempt in range(10):
+                        response = requests.get(url, headers=headers, allow_redirects=True, timeout=5)
+                        if response.status_code == 200 and len(response.content) > 0:
+                            success = True
+                            break
+                        time.sleep(1)  # GitHub met parfois quelques secondes à rendre l'image dispo
+                    
+                    if success:
+                        ext = url.split(".")[-1].split("?")[0]
+                        filename = f"image_{i+1}.{ext}"
                         zip_file.writestr(filename, response.content)
                         st.success(f"✅ {filename} ajouté ({len(response.content)} octets)")
                     else:
-                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+                        st.warning(f"❌ Image non disponible après attente : {url}")
 
-                except Exception as e:
-                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
         zip_buffer.seek(0)
         st.download_button(
