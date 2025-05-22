@@ -3,7 +3,7 @@ import sqlite3
 import base64
 import requests
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import zipfile
 from io import BytesIO
 import re
@@ -160,16 +160,28 @@ for statut in ["à faire", "en cours", "terminé"]:
             col_left, col_right = st.columns([3, 1])
 
             with col_left:
-                st.markdown(f"""
-                <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
-                    <p>📄 <strong>Nom :</strong> {row[2]}</p>
-                    <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
-                    <p>📍 <strong>Adresse :</strong> {row[3]}</p>
-                    <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
-                    <p>📌 <strong>Statut :</strong> {row[7]}</p>
-                    <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
+                
+            # Convertir date_creation (str) en date
+            date_creation = datetime.strptime(row[6], "%Y-%m-%d")
+            date_limite = date_creation + timedelta(days=30)
+            date_limite_str = date_limite.strftime("%Y-%m-%d")
+            
+            st.markdown(f"""
+            <div style='position: relative; padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
+            
+                <!-- Badge date limite en haut à droite -->
+                <div style='position: absolute; top: 10px; right: 10px; background-color: #222; color: #f77; padding: 5px 10px; border-radius: 8px; font-size: 12px;'>
+                    ⏳ Limite : {date_limite_str}
                 </div>
-                """, unsafe_allow_html=True)
+            
+                <p>📄 <strong>Nom :</strong> {row[2]}</p>
+                <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
+                <p>📍 <strong>Adresse :</strong> {row[3]}</p>
+                <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
+                <p>📌 <strong>Statut :</strong> {row[7]}</p>
+                <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
+            </div>
+            """, unsafe_allow_html=True)
             
             with col_right:
                 fiche_id = row[0]
