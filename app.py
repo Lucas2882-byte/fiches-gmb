@@ -215,7 +215,6 @@ for statut in ["à faire", "en cours", "terminé"]:
 
 
 
-
                 if row[5]:
                     urls = row[5].split(";")
                     zip_buffer = BytesIO()
