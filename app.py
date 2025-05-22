@@ -141,11 +141,11 @@ if submitted:
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:
-                name, ext = os.path.splitext(img_file.name)        # Sépare nom + extension
-                ext = ext.lower().replace(".", "")                 # Enlève le point uniquement
-                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")
-                safe_filename = f"{base_name}.{ext}"               # Reconstruit le nom propre
-                st.write(f"🧪 Fichier final : {safe_filename}")     # <-- Debug pour vérifier visuellement
+                name, ext = os.path.splitext(img_file.name)        # Sépare le nom et l'extension
+                ext = ext.lower().replace(".", "")                 # Nettoie juste l’extension, sans point
+                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")  # slugifie le nom sans extension
+                safe_filename = f"{base_name}.{ext}"               # 🟢 ajoute le point manuellement ici
+                st.write(f"🧪 Fichier final : {safe_filename}")     # DEBUG → tu dois voir .jpeg à la fin
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
