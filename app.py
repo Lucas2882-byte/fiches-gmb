@@ -168,7 +168,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     color: #f1f1f1;
                     font-size: 15px;
                 '>
-                    <p>📛 <strong>Nom :</strong> {row[1]}</p>
+                    <p>🧾 <strong>Nom :</strong> {row[1]}</p>
                     <p>🏙️ <strong>Ville :</strong> {row[2]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
