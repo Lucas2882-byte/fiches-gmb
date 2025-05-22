@@ -160,11 +160,12 @@ for statut in ["à faire", "en cours", "terminé"]:
             col_left, col_right = st.columns([3, 1])
 
             with col_left:
-                # Convertir date_creation (str) en date
+                # 1. Calcul de la date limite
                 date_creation = datetime.strptime(row[6], "%Y-%m-%d")
                 date_limite = date_creation + timedelta(days=30)
                 date_limite_str = date_limite.strftime("%Y-%m-%d")
             
+                # 2. HTML correctement construit
                 html_card = f"""
                 <div style='position: relative; padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
             
@@ -181,6 +182,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                 </div>
                 """
             
+                # 3. Rendu HTML autorisé
                 st.markdown(html_card, unsafe_allow_html=True)
 
             
