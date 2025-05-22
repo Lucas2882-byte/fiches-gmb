@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS fiches (
     adresse TEXT,
     telephone TEXT,
     image_url TEXT,
-    statut TEXT DEFAULT 'a faire',
+    statut TEXT DEFAULT 'à faire',
     date_creation TEXT
 )
 """)
@@ -50,6 +50,7 @@ def upload_image_to_github(file, filename):
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
+
     get_resp = requests.get(f"{GITHUB_API_URL}/{filename}", headers=headers)
     sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
 
@@ -65,14 +66,8 @@ def upload_image_to_github(file, filename):
 
     if put_resp.status_code in [200, 201]:
         raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{filename}"
-        for _ in range(10):
-            check = requests.get(raw_url)
-            if check.status_code == 200 and len(check.content) > 0:
-                break
-            time.sleep(1)
         return raw_url
     else:
-        st.error(f"Upload échoué : {filename}")
         return None
 
 # --- Upload DB to GitHub ---
@@ -109,7 +104,11 @@ with st.form("form_ajout"):
             telephone = st.text_input(f"Téléphone #{i+1}", key=f"tel_{i}")
         with col2:
             images = st.file_uploader(f"Images pour la fiche #{i+1}", type=["png", "jpg", "jpeg"], key=f"img_{i}", accept_multiple_files=True)
-        fiches.append({"ville": ville, "telephone": telephone, "images": images})
+        fiches.append({
+            "ville": ville,
+            "telephone": telephone,
+            "images": images
+        })
 
     submitted = st.form_submit_button("Ajouter les fiches")
 
@@ -117,18 +116,19 @@ if submitted:
     now = datetime.now().strftime("%Y-%m-%d")
     for fiche in fiches:
         if not fiche["ville"] or not fiche["telephone"]:
-            st.warning("Merci de remplir tous les champs obligatoires.")
+            st.warning("⚠️ Merci de remplir tous les champs obligatoires (ville et téléphone).")
             continue
 
-        nom = adresse = "à toi de choisir pour optimisation"
+        nom = "à toi de choisir pour optimisation"
+        adresse = "à toi de choisir pour optimisation"
         image_urls = []
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:
                 name, ext = os.path.splitext(img_file.name)
-                ext = ext.lower().replace(".", "")
+                ext = ext.lower()
                 base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")
-                safe_filename = f"{base_name}.{ext}"
+                safe_filename = f"{base_name}{ext}"
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
@@ -140,43 +140,39 @@ if submitted:
     conn.commit()
     upload_db_to_github()
     rows_after = cursor.execute("SELECT COUNT(*) FROM fiches").fetchone()[0]
-    st.success("Fiches ajoutées avec succès")
-    st.info(f"Total de fiches enregistrées : {rows_after}")
+    st.success("✅ Fiches ajoutées avec succès")
+    st.info(f"📊 Total de fiches enregistrées : {rows_after}")
 
 # --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
+
     if row[5]:
         urls = row[5].split(";")
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zip_file:
             for i, url in enumerate(urls):
                 try:
-                    headers = {"User-Agent": "Mozilla/5.0"}
-                    success = False
-                    for _ in range(10):
-                        response = requests.get(url, headers=headers)
-                        if response.status_code == 200 and len(response.content) > 0:
-                            success = True
-                            break
-                        time.sleep(1)
+                    headers = {
+                        "User-Agent": "Mozilla/5.0"
+                    }
+                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                    ext = url.split(".")[-1].split("?")[0]
+                    filename = f"image_{i+1}.{ext}"
 
-                    if success:
-                        ext = url.split(".")[-1].split("?")[0]
-                        filename = f"image_{i+1}.{ext}"
+                    if response.status_code == 200 and len(response.content) > 0:
                         zip_file.writestr(filename, response.content)
-                        st.success(f"Ajouté : {filename} ({len(response.content)} octets)")
                     else:
-                        st.warning(f"Non disponible après 10s : {url}")
+                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
 
                 except Exception as e:
-                    st.error(f"Erreur sur {url} : {e}")
+                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
         zip_buffer.seek(0)
         st.download_button(
-            label="📆 Télécharger toutes les images de cette fiche",
+            label="📦 Télécharger toutes les images de cette fiche",
             data=zip_buffer,
             file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
