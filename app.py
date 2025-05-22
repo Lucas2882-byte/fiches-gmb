@@ -7,9 +7,8 @@ from datetime import datetime
 import zipfile
 from io import BytesIO
 import re
-import unicodedata  # ← requis pour slugify
+import unicodedata
 import time
-import os
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
@@ -25,7 +24,6 @@ DB_FILE = "fiches_gmb.db"
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 cursor = conn.cursor()
 
-# S'assurer que la table contient bien la colonne image_url si elle n'existe pas
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS fiches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,13 +38,22 @@ CREATE TABLE IF NOT EXISTS fiches (
 """)
 conn.commit()
 
+# --- Corriger les anciennes URLs sans point dans l'extension ---
+cursor.execute("SELECT id, image_url FROM fiches")
+rows = cursor.fetchall()
+for row in rows:
+    id_, urls = row
+    if urls:
+        corrected = urls.replace("toiturejpeg", "toiture.jpeg")
+        if corrected != urls:
+            cursor.execute("UPDATE fiches SET image_url = ? WHERE id = ?", (corrected, id_))
+conn.commit()
+
 # --- GitHub Upload Function ---
 GITHUB_TOKEN = st.secrets["GH_TOKEN"]
 GITHUB_REPO = "Lucas2882-byte/fiches-gmb"
 GITHUB_BRANCH = "main"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/images"
-
-import time  # à mettre tout en haut du fichier si ce n’est pas encore importé
 
 def upload_image_to_github(file, filename):
     content = base64.b64encode(file.read()).decode()
@@ -84,7 +91,6 @@ def upload_image_to_github(file, filename):
         st.error(f"❌ Upload échoué pour : {filename}")
         st.code(put_resp.text)
         return None
-
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
@@ -141,11 +147,11 @@ if submitted:
 
         if fiche["images"]:
             for img_file in fiche["images"][:60]:
-                name, ext = os.path.splitext(img_file.name)          # ➤ Sépare le nom de l'extension
-                ext = ext.lower()                                    # ✅ Conserve le point .jpg / .jpeg
-                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")  # Slugify seulement le nom
-                safe_filename = f"{base_name}{ext}"                  # ✅ Recolle proprement le nom + extension
-                st.write(f"🧪 Fichier final : {safe_filename}")       # Debug visible dans l'interface
+                name, ext = os.path.splitext(img_file.name)
+                ext = ext.lower()
+                base_name = slugify(f"{fiche['ville']}_{now.replace('-', '')}_{name}")
+                safe_filename = f"{base_name}{ext}"
+                st.write(f"🧪 Fichier final : {safe_filename}")
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
@@ -161,12 +167,11 @@ if submitted:
     st.info(f"📊 Total de fiches enregistrées : {rows_after}")
 
 # --- Affichage ---
-# --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 for row in rows:
     st.markdown(f"**{row[1]}** - {row[2]} - {row[3]} - {row[4]}")
-    
+
     if row[5]:
         urls = row[5].split(";")
         zip_buffer = BytesIO()
@@ -191,9 +196,8 @@ for row in rows:
 
         zip_buffer.seek(0)
         st.download_button(
-            label="📦 Télécharger toutes les images de cette fiche",
+            label="📆 Télécharger toutes les images de cette fiche",
             data=zip_buffer,
             file_name=f"fiche_{row[0]}_images.zip",
             mime="application/zip"
         )
-
