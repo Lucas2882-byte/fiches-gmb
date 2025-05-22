@@ -109,7 +109,7 @@ with st.form("form_ajout"):
         fiches.append({
             "ville": ville,
             "telephone": telephone,
-            "images": images
+            "images": images,
             "site_web": site_web
         })
 
