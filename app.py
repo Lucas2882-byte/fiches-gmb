@@ -157,26 +157,25 @@ for row in rows:
 for statut in ["à faire", "en cours", "terminé"]:
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
-            with st.container():
+            col_left, col_right = st.columns([3, 1])
+
+            with col_left:
                 st.markdown(f"""
-                <div style='
-                    padding: 18px;
-                    border: 1px solid #444;
-                    border-radius: 10px;
-                    margin-bottom: 15px;
-                    background-color: #1a1a1a;
-                    color: #f1f1f1;
-                    font-size: 15px;
-                '>
-                    <p>🧾 <strong>Nom :</strong> {row[1]}</p>
+                <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
+                    <p>📄 <strong>Nom :</strong> {row[1]}</p>
                     <p>🏙️ <strong>Ville :</strong> {row[2]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
                     <p>📌 <strong>Statut :</strong> {row[7]}</p>
-                    <p>🗓️ <strong>Date d'ajout :</strong> {row[6]}</p>
-
+                    <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
                 </div>
                 """, unsafe_allow_html=True)
+
+            with col_right:
+                st.checkbox("🆕 Création de la fiche", value=True, disabled=True)
+                st.checkbox("📞 Ajout du numéro", value=bool(row[4]), disabled=True)
+                st.checkbox("🖼️ Ajout des photos", value=bool(row[5]), disabled=True)
+                st.checkbox("🌐 Ajout du site internet", value=False, disabled=True)  # À adapter plus tard
 
                 if row[5]:
                     urls = row[5].split(";")
