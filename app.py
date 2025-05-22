@@ -134,6 +134,7 @@ if submitted:
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
+                    st.write("🔗 URL sauvegardée :", url)
 
         cursor.execute(
             "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation) VALUES (?, ?, ?, ?, ?, ?, ?)",
