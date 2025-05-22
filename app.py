@@ -165,25 +165,26 @@ for statut in ["à faire", "en cours", "terminé"]:
                 date_limite = date_creation + timedelta(days=30)
                 date_limite_str = date_limite.strftime("%Y-%m-%d")
             
-                # 2. HTML correctement construit
+                # 2. HTML correctement construit SANS indentation
                 html_card = f"""
-                <div style='position: relative; padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
+            <div style='position: relative; padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
             
-                    <div style='position: absolute; top: 10px; right: 10px; background-color: #222; color: #f77; padding: 5px 10px; border-radius: 8px; font-size: 12px;'>
-                        ⏳ Limite : {date_limite_str}
-                    </div>
-            
-                    <p>📄 <strong>Nom :</strong> {row[2]}</p>
-                    <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
-                    <p>📍 <strong>Adresse :</strong> {row[3]}</p>
-                    <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
-                    <p>📌 <strong>Statut :</strong> {row[7]}</p>
-                    <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
+                <div style='position: absolute; top: 10px; right: 10px; background-color: #222; color: #f77; padding: 5px 10px; border-radius: 8px; font-size: 12px;'>
+                    ⏳ Limite : {date_limite_str}
                 </div>
-                """
+            
+                <p>📄 <strong>Nom :</strong> {row[2]}</p>
+                <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
+                <p>📍 <strong>Adresse :</strong> {row[3]}</p>
+                <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
+                <p>📌 <strong>Statut :</strong> {row[7]}</p>
+                <p>📅 <strong>Date d'ajout :</strong> {row[6]}</p>
+            </div>
+            """
             
                 # 3. Rendu HTML autorisé
                 st.markdown(html_card, unsafe_allow_html=True)
+
 
             
             with col_right:
