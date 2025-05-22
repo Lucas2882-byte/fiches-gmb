@@ -163,14 +163,15 @@ if submitted:
     st.info(f"📊 Total de fiches enregistrées : {rows_after}")
     try:
         envoyer_email_smtp(
-            host="smtp.lucas-freelance.fr",  # ⚠️ à adapter selon ton hébergeur
+            host="smtp.hostinger.com",
             port=465,
             login="contact@lucas-freelance.fr",
             mot_de_passe=st.secrets["SMTP_PASSWORD"],
             destinataire="lmandalorien@gmail.com",
             sujet="📌 Nouvelles fiches GMB ajoutées",
-            message=f"{len(fiches)} fiche(s) GMB ont été ajoutées via l'interface Streamlit."
+            message=f"{len(fiches)} fiche(s) ont été ajoutées par le formulaire Streamlit."
         )
+
         st.success("📧 Email de notification envoyé.")
     except Exception as e:
         st.warning(f"⚠️ Échec de l'envoi de l'email : {e}")
