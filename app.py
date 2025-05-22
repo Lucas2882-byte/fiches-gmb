@@ -137,9 +137,10 @@ if submitted:
                     image_urls.append(url)
 
         cursor.execute(
-            "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now)
+            "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now, fiche["site_web"], numero_client)
         )
+
     conn.commit()
     upload_db_to_github()
     rows_after = cursor.execute("SELECT COUNT(*) FROM fiches").fetchone()[0]
