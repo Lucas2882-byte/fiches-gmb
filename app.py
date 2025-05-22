@@ -173,19 +173,40 @@ for statut in ["à faire", "en cours", "terminé"]:
 
             with col_right:
                 fiche_id = row[0]
-                creation_fiche = st.checkbox("🆕 Création de la fiche", value=bool(row[13]), key=f"creation_fiche_{fiche_id}")
-                ajout_numero = st.checkbox("📞 Ajout du numéro", value=bool(row[14]), key=f"ajout_numero_{fiche_id}")
-                ajout_photos = st.checkbox("🖼️ Ajout des photos", value=bool(row[15]), key=f"ajout_photos_{fiche_id}")
-                ajout_site = st.checkbox("🌐 Ajout du site internet", value=bool(row[16]), key=f"ajout_site_{fiche_id}")
+                checkbox_prefix = f"fiche_{fiche_id}"
                 
+                # Initialiser les valeurs dans session_state si pas encore fait
+                for key, db_index in {
+                    "creation_fiche": 13,
+                    "ajout_numero": 14,
+                    "ajout_photos": 15,
+                    "ajout_site": 16
+                }.items():
+                    if f"{checkbox_prefix}_{key}" not in st.session_state:
+                        st.session_state[f"{checkbox_prefix}_{key}"] = bool(row[db_index])
+                
+                # Afficher les cases à cocher
+                creation_fiche = st.checkbox("🆕 Création de la fiche", key=f"{checkbox_prefix}_creation_fiche")
+                ajout_numero = st.checkbox("📞 Ajout du numéro", key=f"{checkbox_prefix}_ajout_numero")
+                ajout_photos = st.checkbox("🖼️ Ajout des photos", key=f"{checkbox_prefix}_ajout_photos")
+                ajout_site = st.checkbox("🌐 Ajout du site internet", key=f"{checkbox_prefix}_ajout_site")
+                
+                # Sauvegarde des modifications
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                     cursor.execute("""
                         UPDATE fiches
                         SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
                         WHERE id = ?
-                    """, (int(creation_fiche), int(ajout_numero), int(ajout_photos), int(ajout_site), fiche_id))
+                    """, (
+                        int(st.session_state[f"{checkbox_prefix}_creation_fiche"]),
+                        int(st.session_state[f"{checkbox_prefix}_ajout_numero"]),
+                        int(st.session_state[f"{checkbox_prefix}_ajout_photos"]),
+                        int(st.session_state[f"{checkbox_prefix}_ajout_site"]),
+                        fiche_id
+                    ))
                     conn.commit()
                     st.success("✅ État mis à jour avec succès.")
+
 
 
                 if row[5]:
