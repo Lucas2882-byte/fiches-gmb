@@ -9,8 +9,21 @@ from io import BytesIO
 import re
 import unicodedata
 import time
+import smtplib
+from email.mime.text import MIMEText
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
+
+
+def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, message):
+    msg = MIMEText(message)
+    msg["Subject"] = sujet
+    msg["From"] = login
+    msg["To"] = destinataire
+
+    with smtplib.SMTP_SSL(host, port) as server:
+        server.login(login, mot_de_passe)
+        server.send_message(msg)
 
 # --- Fonction pour nettoyer les noms de fichiers (sans accents, espaces, etc.) ---
 def slugify(value):
@@ -148,6 +161,20 @@ if submitted:
     rows_after = cursor.execute("SELECT COUNT(*) FROM fiches").fetchone()[0]
     st.success("✅ Fiches ajoutées avec succès")
     st.info(f"📊 Total de fiches enregistrées : {rows_after}")
+    try:
+        envoyer_email_smtp(
+            host="smtp.lucas-freelance.fr",  # ⚠️ à adapter selon ton hébergeur
+            port=465,
+            login="contact@lucas-freelance.fr",
+            mot_de_passe=st.secrets["SMTP_PASSWORD"],
+            destinataire="lmandalorien@gmail.com",
+            sujet="📌 Nouvelles fiches GMB ajoutées",
+            message=f"{len(fiches)} fiche(s) GMB ont été ajoutées via l'interface Streamlit."
+        )
+        st.success("📧 Email de notification envoyé.")
+    except Exception as e:
+        st.warning(f"⚠️ Échec de l'envoi de l'email : {e}")
+
 
 # --- Affichage ---
 st.subheader("📁 Fiches enregistrées")
