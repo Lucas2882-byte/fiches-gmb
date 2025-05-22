@@ -187,22 +187,32 @@ for statut in ["à faire", "en cours", "terminé"]:
                 st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                 st.progress(progress_percent)
             
-                # ✅ Bouton pour enregistrer les cases actuelles (0 ou 1)
                 if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
+                    # Déterminer le statut à enregistrer selon le pourcentage
+                    if progress_percent == 100:
+                        nouveau_statut = "terminé"
+                    elif progress_percent > 25:
+                        nouveau_statut = "en cours"
+                    else:
+                        nouveau_statut = "à faire"
+            
+                    # Mise à jour dans la BDD
                     cursor.execute("""
                         UPDATE fiches
-                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?
+                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
                         WHERE id = ?
                     """, (
-                        int(fiche_creee),   # 1 si coché, 0 si décoché
+                        int(fiche_creee),
                         int(tel_ajoute),
                         int(photos_ajoutees),
                         int(site_web_ajoute),
+                        nouveau_statut,
                         fiche_id
                     ))
                     conn.commit()
                     upload_db_to_github()
-                    st.success("✅ État mis à jour avec succès.")
+                    st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
+
 
 
 
