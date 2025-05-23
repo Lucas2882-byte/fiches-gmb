@@ -363,6 +363,8 @@ for statut in ["à faire", "en cours", "terminé"]:
                     st.download_button(
                         label="📦 Télécharger toutes les images de cette fiche",
                         data=zip_buffer,
-                        file_name=f"fiche_{row[0]}_images.zip",
+                        nom_client = row[18] if row[18] else f"id_{row[0]}"
+                        file_name = f"Fiche_{slugify(nom_client)}_images.zip"
+
                         mime="application/zip"
                     )
