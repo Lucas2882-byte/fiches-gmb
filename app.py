@@ -244,6 +244,9 @@ for row in rows:
         stats["à faire"].append(row)  # 🔁 fallback pour les valeurs inattendues
 
 for statut in ["à faire", "en cours", "terminé"]:
+    statut_maj = statut.upper()
+    with st.expander(f"<span style='font-weight: bold; text-transform: uppercase; color: red;'>📌 {statut_maj} ({len(stats[statut])})</span>", expanded=False):
+        st.markdown("", unsafe_allow_html=True)  # obligatoire pour interpréter HTML dans `expander`
     with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
         for row in stats[statut]:
             col_left, col_right = st.columns([3, 1])
