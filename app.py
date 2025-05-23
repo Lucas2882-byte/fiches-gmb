@@ -375,7 +375,6 @@ for statut in ["à faire", "en cours", "terminé"]:
                         
                 elif action == "Modifier les informations de la fiche":
                     nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
-                    nouvelle_ville = st.text_input("🏙️ Ville", value=row[1], key=f"edit_ville_{fiche_id}")
                     nouvelle_adresse = st.text_input("📍 Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
                     nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"edit_tel_{fiche_id}")
                     nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
