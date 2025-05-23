@@ -434,7 +434,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                         # 📢 Notification si changement détecté
                         if nouveau_nom != ancien_nom or nouvelle_adresse != ancienne_adresse:
                             envoyer_notification_discord(
-                                f"✏️ **Fiche #{fiche_id} modifiée**\n"
+                                f"✏️ **Fiche Client : {row[18] if row[18] else f'id_{fiche_id}'} modifiée**\n"
                                 f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n"
                                 f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}"
                             )
