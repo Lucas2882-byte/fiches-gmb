@@ -217,7 +217,7 @@ for statut in ["à faire", "en cours", "terminé"]:
             # Affichage Streamlit
             with col_left:
                 # Récupère le nom du client
-                nom_client = row[9] if row[9] else "—"
+                nom_client = row[18] if row[18] else "—"
                 couleur_client = couleur_depuis_nom(nom_client)
                 
                 st.markdown(f"""
