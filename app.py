@@ -338,7 +338,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     
                     # ✅ Affichage de l'avancement
                     total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
-                    progress_percent = int((total_checked / 4) * 100)
+                    progress_percent = total_checked * 20
                     st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                     st.progress(progress_percent)
                     
