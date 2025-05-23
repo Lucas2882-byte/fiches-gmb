@@ -347,18 +347,36 @@ for statut in ["à faire", "en cours", "terminé"]:
                             st.warning("❌ Fiche supprimée")
                             st.rerun()
                             
-                    nom_client = row[18] if row[18] else f"id_{row[0]}"
-                    nom_client_slug = slugify(nom_client)
-                    nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
+                    if row[5]:
+                        urls = row[5].split(";")
+                        zip_buffer = BytesIO()
+                        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                            for i, url in enumerate(urls):
+                                try:
+                                    headers = {"User-Agent": "Mozilla/5.0"}
+                                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                                    ext = url.split(".")[-1].split("?")[0]
+                                    filename = f"image_{i+1}.{ext}"
                     
-                    # ✅ Bouton plein largeur pour téléchargement
-                    st.download_button(
-                        label="📦 Télécharger toutes les images de cette fiche",
-                        data=zip_buffer,
-                        file_name=f"Fiche_{slugify(row[18] if row[18] else f'id_{fiche_id}')}_images.zip",
-                        mime="application/zip",
-                        key=f"download_btn_{fiche_id}"
-                    )
+                                    if response.status_code == 200 and len(response.content) > 0:
+                                        zip_file.writestr(filename, response.content)
+                                    else:
+                                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+                                except Exception as e:
+                                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+                    
+                        zip_buffer.seek(0)
+                        nom_client = row[18] if row[18] else f"id_{row[0]}"
+                        nom_fichier_zip = f"Fiche_{slugify(nom_client)}_images.zip"
+                    
+                        # ✅ Pleine largeur, sous les boutons
+                        st.download_button(
+                            label="📦 Télécharger toutes les images de cette fiche",
+                            data=zip_buffer,
+                            file_name=nom_fichier_zip,
+                            mime="application/zip",
+                            key=f"download_btn_{fiche_id}"
+                        )
 
             
                   
