@@ -15,6 +15,40 @@ import hashlib
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
+PALETTE_COULEURS = [
+    "#e6194b",  # Rouge
+    "#3cb44b",  # Vert
+    "#ffe119",  # Jaune
+    "#4363d8",  # Bleu
+    "#f58231",  # Orange
+    "#911eb4",  # Violet
+    "#46f0f0",  # Cyan
+    "#f032e6",  # Rose
+    "#bcf60c",  # Vert clair
+    "#fabebe",  # Rose pâle
+    "#008080",  # Sarcelle
+    "#e6beff",  # Lavande
+    "#9a6324",  # Marron
+    "#fffac8",  # Crème
+    "#800000",  # Bordeaux
+    "#aaffc3",  # Menthe
+    "#808000",  # Olive
+    "#ffd8b1",  # Pêche
+    "#000075",  # Bleu marine foncé
+    "#808080",  # Gris
+    "#ffffff",  # Blanc
+    "#000000",  # Noir
+    "#a9a9a9",  # Gris foncé
+    "#32cd32",  # Lime
+    "#ff69b4",  # Rose vif
+    "#00ced1",  # Bleu clair saturé
+    "#ffa500",  # Orange vif
+    "#8a2be2",  # Bleu violet
+    "#1e90ff",  # Bleu Dodger
+    "#ff1493"   # Rose profond
+]
+
+
 def couleur_depuis_nom(nom_client):
     if nom_client == "—":
         return "#999"  # Gris par défaut pour "inconnu"
