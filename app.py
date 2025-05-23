@@ -251,13 +251,8 @@ couleurs = {
 
 for statut in ["à faire", "en cours", "terminé"]:
     statut_maj = statut.upper()
-    couleur = couleurs.get(statut, "white")
 
     with st.expander(f"📌 {statut_maj} ({len(stats[statut])})"):
-        st.markdown(
-            f"<h4 style='font-weight: bold; text-transform: uppercase; color: {couleur};'>📌 {statut_maj}</h4>",
-            unsafe_allow_html=True
-        )
 
         for row in stats[statut]:
             col_left, col_right = st.columns([3, 1])
