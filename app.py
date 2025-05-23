@@ -237,7 +237,10 @@ for statut in ["à faire", "en cours", "terminé"]:
                     <p style='color: #ff4444;'>🛑 <strong>Date de fin :</strong> {date_fin_str}</p>
                 </div>
                 """
+            
+                # Rendu HTML propre
                 st.markdown(bloc_html, unsafe_allow_html=True)
+
             
 
                 
