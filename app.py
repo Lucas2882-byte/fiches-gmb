@@ -290,7 +290,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     """
                     <style>
                     .block-container select {
-                        margin-top: 6px;
+                        margin-top: 10px;
                     }
                     </style>
                     """,
