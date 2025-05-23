@@ -362,45 +362,44 @@ for statut in ["à faire", "en cours", "terminé"]:
                             st.rerun()
                     
                     with col_btn2:
-                        confirm_delete = st.checkbox("☑️ Je confirme la suppression", key=f"confirm_delete_{fiche_id}")
-                        if confirm_delete:
-                            if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
-                                cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
-                                conn.commit()
-                                upload_db_to_github()
-                                st.warning("❌ Fiche supprimée")
-                                st.rerun()
-                            
-                    if row[5]:
-                        urls = row[5].split(";")
-                        zip_buffer = BytesIO()
-                        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-                            for i, url in enumerate(urls):
-                                try:
-                                    headers = {"User-Agent": "Mozilla/5.0"}
-                                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                                    ext = url.split(".")[-1].split("?")[0]
-                                    filename = f"image_{i+1}.{ext}"
+                        if row[5]:
+                            urls = row[5].split(";")
+                            zip_buffer = BytesIO()
+                            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                                for i, url in enumerate(urls):
+                                    try:
+                                        headers = {"User-Agent": "Mozilla/5.0"}
+                                        response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                                        ext = url.split(".")[-1].split("?")[0]
+                                        filename = f"image_{i+1}.{ext}"
+                                        if response.status_code == 200 and len(response.content) > 0:
+                                            zip_file.writestr(filename, response.content)
+                                        else:
+                                            st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+                                    except Exception as e:
+                                        st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
                     
-                                    if response.status_code == 200 and len(response.content) > 0:
-                                        zip_file.writestr(filename, response.content)
-                                    else:
-                                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
-                                except Exception as e:
-                                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+                            zip_buffer.seek(0)
+                            nom_client = row[18] if row[18] else f"id_{row[0]}"
+                            nom_fichier_zip = f"Fiche_{slugify(nom_client)}_images.zip"
                     
-                        zip_buffer.seek(0)
-                        nom_client = row[18] if row[18] else f"id_{row[0]}"
-                        nom_fichier_zip = f"Fiche_{slugify(nom_client)}_images.zip"
+                            st.download_button(
+                                label="📦 Télécharger toutes les images de cette fiche",
+                                data=zip_buffer,
+                                file_name=nom_fichier_zip,
+                                mime="application/zip",
+                                key=f"download_btn_{fiche_id}"
+                            )
                     
-                        # ✅ Pleine largeur, sous les boutons
-                        st.download_button(
-                            label="📦 Télécharger toutes les images de cette fiche",
-                            data=zip_buffer,
-                            file_name=nom_fichier_zip,
-                            mime="application/zip",
-                            key=f"download_btn_{fiche_id}"
-                        )
+                    # ➕ Ligne complète : case à cocher + bouton suppression conditionnel
+                    confirm_delete = st.checkbox("☑️ Je confirme la suppression", key=f"confirm_delete_{fiche_id}")
+                    if confirm_delete:
+                        if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
+                            cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
+                            conn.commit()
+                            upload_db_to_github()
+                            st.warning("❌ Fiche supprimée")
+                            st.rerun()
 
             
                   
