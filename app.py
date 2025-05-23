@@ -495,7 +495,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                                 f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n\n"
                                 f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}\n\n"
                                 f"📞 **Téléphone :** {row[4]} → {nouveau_tel}\n\n"
-                                f"🌐 **Site web :** {(row[8] if row[8] else '—')} → {nouveau_site}\n\n"
+                                f"🌐 **Site web :** {(row[17] if row[17] else '—')} → {nouveau_site}\n\n"
                                 f"<@314729858863464448> <@1222133249824915509>"
                             )
                             # ✉️ Envoi email si téléphone ou site web modifié
@@ -512,7 +512,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                                             f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
                                             f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
                                             f"📞 Téléphone : {row[4]} → {nouveau_tel}\n"
-                                            f"🌐 Site web : {(row[8] if row[8] else '—')} → {nouveau_site}"
+                                            f"🌐 Site web : {(row[17] if row[17] else '—')} → {nouveau_site}"
                                         )
                                     )
                                 except Exception as e:
