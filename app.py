@@ -223,7 +223,7 @@ if submitted:
             port=465,
             login="contact@lucas-freelance.fr",
             mot_de_passe=st.secrets["SMTP_PASSWORD"],
-            destinataire="lmandalorien@gmail.com",
+            destinataire="lucaswebsite28@gmail.com",
             sujet="📌 Nouvelles fiches GMB ajoutées",
             message=f"{len(fiches)} fiche(s) ont été ajoutées par le formulaire Streamlit."
         )
@@ -467,7 +467,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                 
                     with col2:
                         nouvelle_adresse = st.text_input("🏙️ Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
-                        nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
+                        nouveau_site = st.text_input("🌐 Site web", value=row[18] if row[18] else "", key=f"edit_site_{fiche_id}")
                 
                     if st.button("✅ Enregistrer les modifications", key=f"btn_save_infos_{fiche_id}"):
                         # ⬅️ Récupérer les anciennes valeurs
