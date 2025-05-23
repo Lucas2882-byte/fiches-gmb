@@ -374,19 +374,25 @@ for statut in ["à faire", "en cours", "terminé"]:
                         )
                         
                 elif action == "Modifier les informations de la fiche":
-                    nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
-                    nouvelle_adresse = st.text_input("📍 Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
-                    nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"edit_tel_{fiche_id}")
-                    nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
+                    col1, col2 = st.columns(2)
+                
+                    with col1:
+                        nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
+                        nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"edit_tel_{fiche_id}")
+                
+                    with col2:
+                        nouvelle_ville = st.text_input("🏙️ Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
+                        nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
                 
                     if st.button("✅ Enregistrer les modifications", key=f"btn_save_infos_{fiche_id}"):
                         cursor.execute("""
                             UPDATE fiches
                             SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
                             WHERE id = ?
-                        """, (nouveau_nom, nouvelle_ville, nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
+                        """, (nouveau_nom, row[1], nouvelle_ville, nouveau_tel, nouveau_site, fiche_id))
                         conn.commit()
                         upload_db_to_github()
                         st.success("📝 Informations mises à jour avec succès")
                         st.rerun()
+
                     
