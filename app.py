@@ -346,7 +346,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     check_fiche_terminee = False
                     
                     if progress_percent == 80:
-                        lien_termine = st.text_input("🔗 Lien final de la fiche (optionnel)", key=f"lien_termine_{fiche_id}")
+                        lien_termine = st.text_input("🔗 Lien final de la fiche", key=f"lien_termine_{fiche_id}")
                         check_fiche_terminee = st.checkbox("✅ Confirmer la mise en ligne de la fiche", key=f"confirm_termine_{fiche_id}")
                         if check_fiche_terminee:
                             total_checked += 1
