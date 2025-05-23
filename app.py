@@ -382,8 +382,27 @@ for statut in ["à faire", "en cours", "terminé"]:
                             ))
                             conn.commit()
                             upload_db_to_github()
+                            if nouveau_statut == "terminé":
+                                try:
+                                    nom_client = row[18] if row[18] else f"id_{fiche_id}"
+                                    ville = row[1]
+                                    adresse = row[3]
+                                    lien_fiche = st.session_state.get(f"lien_fiche_{fiche_id}", "—")
+                            
+                                    envoyer_notification_discord(
+                                        f"✅ **Fiche Client terminée : {nom_client}**\n\n"
+                                        f"🏙️ **Ville :** {ville}\n\n"
+                                        f"📍 **Adresse :** {adresse}\n\n"
+                                        f"🔗 **Lien final :** {lien_fiche}\n\n"
+                                        f"<@314729858863464448> <@1222133249824915509>"
+                                    )
+                                except Exception as e:
+                                    st.error(f"💥 Erreur lors de l'envoi de la notification Discord : {e}")
+
                             st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
                             st.rerun()
+
+                            
                     
                     with col_btn2:
                         if row[5]:
