@@ -15,9 +15,11 @@ import hashlib
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
-def couleur_depuis_nom(nom):
-    h = hashlib.md5(nom.encode()).hexdigest()
-    return f"#{h[:6]}"  # première partie du hash = couleur hex
+def couleur_depuis_nom(nom_client):
+    if nom_client == "—":
+        return "#999"  # Gris par défaut pour "inconnu"
+    index = abs(hash(nom_client)) % len(PALETTE_COULEURS)
+    return PALETTE_COULEURS[index]
 
 
 def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, message):
