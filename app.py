@@ -286,6 +286,14 @@ for statut in ["à faire", "en cours", "terminé"]:
             
             with col_right:
                 fiche_id = row[0]
+
+                action = st.selectbox(
+                    "🔧 Action sur la fiche",
+                    ["Mettre à jour la progression", "Modifier les informations de la fiche"],
+                    key=f"action_{fiche_id}"
+                )
+                
+                if action == "Mettre à jour la progression":
             
                 # ✅ Affichage correct avec état vrai ou faux depuis la BDD
                 fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
@@ -333,7 +341,23 @@ for statut in ["à faire", "en cours", "terminé"]:
                     upload_db_to_github()
                     st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
                     st.rerun()
-
+                elif action == "Modifier les informations de la fiche":
+                    nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
+                    nouvelle_ville = st.text_input("🏙️ Ville", value=row[1], key=f"edit_ville_{fiche_id}")
+                    nouvelle_adresse = st.text_input("📍 Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
+                    nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"edit_tel_{fiche_id}")
+                    nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
+                
+                    if st.button("✅ Enregistrer les modifications", key=f"btn_save_infos_{fiche_id}"):
+                        cursor.execute("""
+                            UPDATE fiches
+                            SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
+                            WHERE id = ?
+                        """, (nouveau_nom, nouvelle_ville, nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
+                        conn.commit()
+                        upload_db_to_github()
+                        st.success("📝 Informations mises à jour avec succès")
+                        st.rerun()
 
                     
 
