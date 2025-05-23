@@ -286,6 +286,16 @@ for statut in ["à faire", "en cours", "terminé"]:
             
             with col_right:
                 fiche_id = row[0]
+                st.markdown(
+                    """
+                    <style>
+                    .block-container select {
+                        margin-top: 6px;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
 
                 action = st.selectbox(
                     "🔧 Action sur la fiche",
