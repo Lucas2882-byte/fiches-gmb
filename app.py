@@ -11,8 +11,13 @@ import unicodedata
 import time
 import smtplib
 from email.mime.text import MIMEText
+import hashlib
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
+
+def couleur_depuis_nom(nom):
+    h = hashlib.md5(nom.encode()).hexdigest()
+    return f"#{h[:6]}"  # première partie du hash = couleur hex
 
 
 def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, message):
@@ -211,6 +216,9 @@ for statut in ["à faire", "en cours", "terminé"]:
             
             # Affichage Streamlit
             with col_left:
+                nom_client = row[9] if row[9] else "—"
+                couleur_client = couleur_depuis_nom(nom_client)
+                
                 st.markdown(f"""
                 <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
                     <p>📄 <strong>Nom :</strong> {row[2]}</p>
