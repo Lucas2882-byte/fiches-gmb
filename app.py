@@ -216,23 +216,29 @@ for statut in ["à faire", "en cours", "terminé"]:
             
             # Affichage Streamlit
             with col_left:
+                # Récupère le nom du client
                 nom_client = row[9] if row[9] else "—"
                 couleur_client = couleur_depuis_nom(nom_client)
                 
                 st.markdown(f"""
                 <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
+                
+                    <div style='background-color: {couleur_client}; color: white; padding: 5px 10px; border-radius: 8px; display: inline-block; font-weight: bold; margin-bottom: 10px;'>
+                        🔢 {nom_client}
+                    </div>
+                
                     <p>📄 <strong>Nom :</strong> {row[2]}</p>
                     <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
                     <p>📞 <strong>Téléphone :</strong> {row[4]}</p>
-                    <p>🌐 <strong>Site :</strong> {row[17] if row[17] else "—"}</p>
-                    <p>🔢 <strong>Client :</strong> {row[18] if row[18] else "—"}</p>
+                    <p>🌐 <strong>Site :</strong> {row[8] if row[8] else "—"}</p>
                     <p>📌 <strong>Statut :</strong> {row[7]}</p>
                     <p>📅 <strong>Date d'ajout :</strong> {date_creation_str}</p>
                     <p style='color: #ff4444;'>🛑 <strong>Date de fin :</strong> {date_fin_str}</p>
                 </div>
                 """, unsafe_allow_html=True)
-
+                
+                
 
             
             with col_right:
