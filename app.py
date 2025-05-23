@@ -430,18 +430,16 @@ for statut in ["à faire", "en cours", "terminé"]:
                         conn.commit()
                         upload_db_to_github()
                         st.success("📝 Informations mises à jour avec succès")
-                
-                        # 📢 Notification si changement détecté
-                       if nouveau_nom != ancien_nom or nouvelle_adresse != ancienne_adresse:
-                            envoyer_notification_discord(
-                                f"✏️ **Fiche Client : {row[18] if row[18] else f'id_{fiche_id}'} modifiée**\n\n"
-                                f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n\n"
-                                f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}\n\n"
-                                f"📞 **Téléphone :** {row[4]}\n\n"
-                                f"🌐 **Site web :** {row[8] if row[8] else '—'}\n\n"
-                                f"<@314729858863464448> <@1222133249824915509>"
-                            )
-
+                  if nouveau_nom != ancien_nom or nouvelle_adresse != ancienne_adresse:
+                    envoyer_notification_discord(
+                        f"✏️ **Fiche Client : {row[18] if row[18] else f'id_{fiche_id}'} modifiée**\n\n"
+                        f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n\n"
+                        f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}\n\n"
+                        f"📞 **Téléphone :** {row[4]}\n\n"
+                        f"🌐 **Site web :** {row[8] if row[8] else '—'}\n\n"
+                        f"<@314729858863464448> <@1222133249824915509>"
+                    )
+            
 
                 
                         st.rerun()
