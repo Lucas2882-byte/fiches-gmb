@@ -362,12 +362,17 @@ for statut in ["à faire", "en cours", "terminé"]:
                             st.rerun()
                     
                     with col_btn2:
-                        if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
-                            cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
-                            conn.commit()
-                            upload_db_to_github()
-                            st.warning("❌ Fiche supprimée")
-                            st.rerun()
+                        # ✅ Case à cocher avant suppression
+                        confirm_delete = st.checkbox("☑️ Je confirme la suppression", key=f"confirm_delete_{fiche_id}")
+                        
+                        # ❌ Bouton de suppression (affiché uniquement si confirmé)
+                        if confirm_delete:
+                            if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
+                                cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
+                                conn.commit()
+                                upload_db_to_github()
+                                st.warning("❌ Fiche supprimée")
+                                st.rerun()
                             
                     if row[5]:
                         urls = row[5].split(";")
