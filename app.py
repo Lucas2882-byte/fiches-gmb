@@ -214,23 +214,22 @@ for statut in ["à faire", "en cours", "terminé"]:
             date_creation_str = date_en_fr(date_creation)
             date_fin_str = date_en_fr(date_fin)
             
-            # Badge au-dessus de la fiche
-            nom_client = row[18] if row[18] else "—"
-            couleur_client = couleur_depuis_nom(nom_client)
-            
-            st.markdown(f"""
-            <div style='background-color: {couleur_client}; color: white; 
-                        padding: 6px 12px; border-radius: 10px; 
-                        font-weight: bold; display: inline-block; margin-bottom: 10px;'>
-                🔢 {nom_client}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Carte de la fiche
             with col_left:
+                nom_client = row[18] if row[18] else "—"
+                couleur_client = couleur_depuis_nom(nom_client) if nom_client != "—" else "#555"
+            
+                # Badge au-dessus
                 st.markdown(f"""
-                <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; 
-                            margin-bottom: 15px; background-color: #111;'>
+                <div style='background-color: {couleur_client}; color: white; 
+                            padding: 6px 12px; border-radius: 10px; 
+                            font-weight: bold; display: inline-block; margin-bottom: 10px;'>
+                    🔢 {nom_client}
+                </div>
+                """, unsafe_allow_html=True)
+            
+                # Carte fiche
+                st.markdown(f"""
+                <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
                     <p>📄 <strong>Nom :</strong> {row[2]}</p>
                     <p>🏙️ <strong>Ville :</strong> {row[1]}</p>
                     <p>📍 <strong>Adresse :</strong> {row[3]}</p>
@@ -241,6 +240,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     <p style='color: #ff4444;'>🛑 <strong>Date de fin :</strong> {date_fin_str}</p>
                 </div>
                 """, unsafe_allow_html=True)
+
 
             
 
