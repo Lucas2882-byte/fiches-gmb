@@ -304,7 +304,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     # Déterminer le statut à enregistrer selon le pourcentage
                     if progress_percent == 100:
                         nouveau_statut = "terminé"
-                    elif progress_percent > 25:
+                    elif progress_percent >= 25:
                         nouveau_statut = "en cours"
                     else:
                         nouveau_statut = "à faire"
