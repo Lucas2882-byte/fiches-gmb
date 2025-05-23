@@ -338,23 +338,31 @@ for statut in ["à faire", "en cours", "terminé"]:
                     
                     # ✅ Affichage de l'avancement
                     # Calcul de l’avancement
+                    # Calcul initial de progression
                     total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
                     progress_percent = total_checked * 20
                     
-                    # Si 80%, proposer de compléter avec lien final
-                    lien_termine = None
-                    check_fiche_terminee = False
+                    # Initialiser le lien final
+                    lien_final_key = f"lien_fiche_{fiche_id}"
                     
+                    # Si à 80%, proposer le champ + checkbox
                     if progress_percent == 80:
-                        lien_termine = st.text_input("🔗 Lien final de la fiche", key=f"lien_termine_{fiche_id}")
-                        check_fiche_terminee = st.checkbox("✅ Confirmer la mise en ligne de la fiche", key=f"confirm_termine_{fiche_id}")
-                        if check_fiche_terminee:
+                        st.session_state[lien_final_key] = st.text_input(
+                            "🔗 Lien final de la fiche", 
+                            key=f"lien_termine_{fiche_id}", 
+                            value=st.session_state.get(lien_final_key, "")
+                        )
+                        if st.checkbox("✅ Confirmer la mise en ligne de la fiche", key=f"confirm_termine_{fiche_id}"):
                             total_checked += 1
                             progress_percent = 100
                     
-                    # Affichage unique de la progression (avec valeur finale si check activé)
+                    # Récupération du lien final (si rempli)
+                    lien_final = st.session_state.get(lien_final_key, "")
+                    
+                    # Affichage final unique de la progression
                     st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                     st.progress(progress_percent)
+
                     # ✅ Ligne de boutons "Sauvegarder" et "Supprimer"
                     col_btn1, col_btn2 = st.columns([0.8, 1.4])
                     with col_btn1:
@@ -370,7 +378,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                             # Mise à jour dans la BDD
                             cursor.execute("""
                                 UPDATE fiches
-                                SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
+                                SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?, lien_fiche_terminee = ?
                                 WHERE id = ?
                             """, (
                                 int(fiche_creee),
@@ -378,6 +386,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                                 int(photos_ajoutees),
                                 int(site_web_ajoute),
                                 nouveau_statut,
+                                lien_final,  # 👈 très important
                                 fiche_id
                             ))
                             conn.commit()
