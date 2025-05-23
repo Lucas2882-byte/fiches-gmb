@@ -294,84 +294,76 @@ for statut in ["à faire", "en cours", "terminé"]:
                 )
                 
                 if action == "Mettre à jour la progression":
-            
-                    # ✅ Affichage correct avec état vrai ou faux depuis la BDD
-                    fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
-                    tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
-                    photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
-                    site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
-                
-                    # ✅ Calcul de l'avancement
+                    # ✅ Section checkboxes en 2 colonnes
+                    col_cb1, col_cb2 = st.columns(2)
+                    with col_cb1:
+                        fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
+                        photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
+                    with col_cb2:
+                        tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
+                        site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
+                    
+                    # ✅ Affichage de l'avancement
                     total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
                     progress_percent = int((total_checked / 4) * 100)
-                
                     st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                     st.progress(progress_percent)
-                
-                    if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
-                        # Déterminer le statut à enregistrer selon le pourcentage
-                        if progress_percent == 100:
-                            nouveau_statut = "terminé"
-                        elif progress_percent >= 25:
-                            nouveau_statut = "en cours"
-                        else:
-                            nouveau_statut = "à faire"
-                
-                        # Mise à jour dans la BDD
-                        cursor.execute("""
-                            UPDATE fiches
-                            SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
-                            WHERE id = ?
-                        """, (
-                            int(fiche_creee),
-                            int(tel_ajoute),
-                            int(photos_ajoutees),
-                            int(site_web_ajoute),
-                            nouveau_statut,
-                            fiche_id
-                        ))
-                        conn.commit()
-                        upload_db_to_github()
-                        st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
-                        st.rerun()
-                        
-                    if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
-                        cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
-                        conn.commit()
-                        upload_db_to_github()
-                        st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
-                        st.rerun()
+                    
+                    # ✅ Ligne de boutons "Sauvegarder" et "Supprimer"
+                    col_btn1, col_btn2 = st.columns([1, 1])
+                    with col_btn1:
+                        if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
+                            # Déterminer le statut à enregistrer selon le pourcentage
+                            if progress_percent == 100:
+                                nouveau_statut = "terminé"
+                            elif progress_percent >= 25:
+                                nouveau_statut = "en cours"
+                            else:
+                                nouveau_statut = "à faire"
+                    
+                            # Mise à jour dans la BDD
+                            cursor.execute("""
+                                UPDATE fiches
+                                SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
+                                WHERE id = ?
+                            """, (
+                                int(fiche_creee),
+                                int(tel_ajoute),
+                                int(photos_ajoutees),
+                                int(site_web_ajoute),
+                                nouveau_statut,
+                                fiche_id
+                            ))
+                            conn.commit()
+                            upload_db_to_github()
+                            st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
+                            st.rerun()
+                    
+                    with col_btn2:
+                        if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
+                            cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
+                            conn.commit()
+                            upload_db_to_github()
+                            st.warning("❌ Fiche supprimée")
+                            st.rerun()
+                            
+                    nom_client = row[18] if row[18] else f"id_{row[0]}"
+                    nom_client_slug = slugify(nom_client)
+                    nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
+                    
+                    # ✅ Bouton plein largeur pour téléchargement
+                    st.download_button(
+                        label="📦 Télécharger toutes les images de cette fiche",
+                        data=zip_buffer,
+                        file_name=f"Fiche_{slugify(row[18] if row[18] else f'id_{fiche_id}')}_images.zip",
+                        mime="application/zip",
+                        key=f"download_btn_{fiche_id}"
+                    )
 
-                    if row[5]:
-                        urls = row[5].split(";")
-                        zip_buffer = BytesIO()
-                        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-                            for i, url in enumerate(urls):
-                                try:
-                                    headers = {"User-Agent": "Mozilla/5.0"}
-                                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                                    ext = url.split(".")[-1].split("?")[0]
-                                    filename = f"image_{i+1}.{ext}"
-    
-                                    if response.status_code == 200 and len(response.content) > 0:
-                                        zip_file.writestr(filename, response.content)
-                                    else:
-                                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
-                                except Exception as e:
-                                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
-    
-                        zip_buffer.seek(0)
-                        # Déterminer le nom client pour le nom du fichier ZIP
-                        nom_client = row[18] if row[18] else f"id_{row[0]}"
-                        nom_client_slug = slugify(nom_client)
-                        nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
+            
+                  
                         
-                        st.download_button(
-                            label="📦 Télécharger toutes les images de cette fiche",
-                            data=zip_buffer,
-                            file_name=nom_fichier_zip,
-                            mime="application/zip"
-                        )
+                    
                         
                 elif action == "Modifier les informations de la fiche":
                     col1, col2 = st.columns(2)
