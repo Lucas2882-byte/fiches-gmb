@@ -360,11 +360,15 @@ for statut in ["à faire", "en cours", "terminé"]:
                                 st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
 
                     zip_buffer.seek(0)
+                    # Déterminer le nom client pour le nom du fichier ZIP
+                    nom_client = row[18] if row[18] else f"id_{row[0]}"
+                    nom_client_slug = slugify(nom_client)
+                    nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
+                    
                     st.download_button(
                         label="📦 Télécharger toutes les images de cette fiche",
                         data=zip_buffer,
-                        nom_client = row[18] if row[18] else f"id_{row[0]}"
-                        file_name = f"Fiche_{slugify(nom_client)}_images.zip"
-
+                        file_name=nom_fichier_zip,
                         mime="application/zip"
                     )
+                    
