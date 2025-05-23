@@ -243,11 +243,22 @@ for row in rows:
     else:
         stats["à faire"].append(row)  # 🔁 fallback pour les valeurs inattendues
 
+couleurs = {
+    "à faire": "red",
+    "en cours": "orange",
+    "terminé": "green"
+}
+
 for statut in ["à faire", "en cours", "terminé"]:
     statut_maj = statut.upper()
-    with st.expander(f"<span style='font-weight: bold; text-transform: uppercase; color: red;'>📌 {statut_maj} ({len(stats[statut])})</span>", expanded=False):
-        st.markdown("", unsafe_allow_html=True)  # obligatoire pour interpréter HTML dans `expander`
-    with st.expander(f"📌 {statut.title()} ({len(stats[statut])})"):
+    couleur = couleurs.get(statut, "white")
+
+    with st.expander(f"📌 {statut_maj} ({len(stats[statut])})"):
+        st.markdown(
+            f"<h4 style='font-weight: bold; text-transform: uppercase; color: {couleur};'>📌 {statut_maj}</h4>",
+            unsafe_allow_html=True
+        )
+
         for row in stats[statut]:
             col_left, col_right = st.columns([3, 1])
             # Dictionnaire de mois en français
