@@ -350,6 +350,22 @@ for statut in ["à faire", "en cours", "terminé"]:
                             st.rerun()
                     
                     with col_btn2:
+                        # Ajoute un identifiant CSS personnalisé pour le bouton
+                        delete = st.button("🗑️ Supprimer cette fiche", key=f"delete_{fiche_id}")
+                        
+                        # Injecte du style CSS juste après
+                        st.markdown("""
+                            <style>
+                                div[data-testid="stButton"] > button[kind="secondary"] {
+                                    background-color: #ff4b4b;
+                                    color: white;
+                                }
+                                div[data-testid="stButton"] > button[kind="secondary"]:hover {
+                                    background-color: #e04343;
+                                    color: white;
+                                }
+                            </style>
+                        """, unsafe_allow_html=True)
                         if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
                             cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
                             conn.commit()
