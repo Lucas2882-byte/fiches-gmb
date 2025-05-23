@@ -194,7 +194,7 @@ if submitted:
             continue
 
         nom = "à toi de choisir pour optimisation"
-        adresse = "à toi de choisir pour optimisation"
+        adresse = fiche["adresse"]
         image_urls = []
 
         if fiche["images"]:
