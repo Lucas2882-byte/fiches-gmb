@@ -218,6 +218,12 @@ for statut in ["à faire", "en cours", "terminé"]:
             with col_left:
                 nom_client = row[18] if row[18] else "—"
                 couleur_client = couleur_depuis_nom(nom_client)
+
+                st.markdown(
+                    f"<div style='background-color:{couleur_client}; color:white; padding:10px; border-radius:6px;'>TEST BADGE – {nom_client}</div>",
+                    unsafe_allow_html=True
+                )
+
             
                 st.markdown(f"""
                 <div style='padding: 15px; border: 1px solid #444; border-radius: 12px; margin-bottom: 15px; background-color: #111;'>
