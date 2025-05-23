@@ -484,15 +484,27 @@ for statut in ["à faire", "en cours", "terminé"]:
                         upload_db_to_github()
                         st.success("📝 Informations mises à jour avec succès")
                 
-                        if nouveau_nom != ancien_nom or nouvelle_adresse != ancienne_adresse:
-                            envoyer_notification_discord(
-                                f"✏️ **Fiche Client : {row[18] if row[18] else f'id_{fiche_id}'} modifiée**\n\n"
-                                f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n\n"
-                                f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}\n\n"
-                                f"📞 **Téléphone :** {row[4]}\n\n"
-                                f"🌐 **Site web :** {row[8] if row[8] else '—'}\n\n"
-                                f"<@314729858863464448> <@1222133249824915509>"
-                            )
+                       if (
+                            nouveau_nom != ancien_nom or
+                            nouvelle_adresse != ancienne_adresse or
+                            nouveau_tel != row[4] or
+                            nouveau_site != (row[8] if row[8] else "")
+                        ):
+                            message_discord = f"✏️ **Fiche Client : {row[18] if row[18] else f'id_{fiche_id}'} modifiée**\n\n"
+                        
+                            if nouveau_nom != ancien_nom:
+                                message_discord += f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n\n"
+                            if nouvelle_adresse != ancienne_adresse:
+                                message_discord += f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}\n\n"
+                            if nouveau_tel != row[4]:
+                                message_discord += f"📞 **Téléphone :** {row[4]} → {nouveau_tel}\n\n"
+                            if nouveau_site != (row[8] if row[8] else ""):
+                                ancien_site = row[8] if row[8] else "—"
+                                message_discord += f"🌐 **Site web :** {ancien_site} → {nouveau_site}\n\n"
+                        
+                            message_discord += "<@314729858863464448> <@1222133249824915509>"
+                        
+                            envoyer_notification_discord(message_discord)
                 
                         st.rerun()
 
