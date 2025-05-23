@@ -332,7 +332,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     conn.commit()
                     upload_db_to_github()
                     st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
-                    st.experimental_rerun()
+                    st.rerun()
 
 
                     
