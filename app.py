@@ -337,11 +337,25 @@ for statut in ["à faire", "en cours", "terminé"]:
                         site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
                     
                     # ✅ Affichage de l'avancement
+                    # Calcul de l’avancement
                     total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
                     progress_percent = total_checked * 20
+                    
+                    # Affichage de la progression
                     st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
                     st.progress(progress_percent)
                     
+                    # Si 80%, afficher le champ pour le lien final
+                    lien_termine = None
+                    check_fiche_terminee = False
+                    if progress_percent == 80:
+                        lien_termine = st.text_input("🔗 Lien final de la fiche (optionnel)", key=f"lien_termine_{fiche_id}")
+                        check_fiche_terminee = st.checkbox("✅ Confirmer la mise en ligne de la fiche", key=f"confirm_termine_{fiche_id}")
+                        if check_fiche_terminee:
+                            total_checked += 1
+                            progress_percent = 100
+                            st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
+                            st.progress(progress_percent)
                     # ✅ Ligne de boutons "Sauvegarder" et "Supprimer"
                     col_btn1, col_btn2 = st.columns([0.8, 1.4])
                     with col_btn1:
