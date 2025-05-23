@@ -332,7 +332,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     st.progress(progress_percent)
                     
                     # ✅ Ligne de boutons "Sauvegarder" et "Supprimer"
-                    col_btn1, col_btn2 = st.columns([1, 1])
+                    col_btn1, col_btn2 = st.columns([0.5, 1.5])
                     with col_btn1:
                         if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                             # Déterminer le statut à enregistrer selon le pourcentage
