@@ -506,7 +506,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                                         port=465,
                                         login="contact@lucas-freelance.fr",
                                         mot_de_passe=st.secrets["SMTP_PASSWORD"],
-                                        destinataire="lmandalorien@gmail.com",
+                                        destinataire="lucaswebsite28@gmail.com",
                                         sujet=f"🔔 Modification fiche client : {row[18] if row[18] else f'id_{fiche_id}'}",
                                         message=(
                                             f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
