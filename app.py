@@ -332,7 +332,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                     st.progress(progress_percent)
                     
                     # ✅ Ligne de boutons "Sauvegarder" et "Supprimer"
-                    col_btn1, col_btn2 = st.columns([0.5, 1.5])
+                    col_btn1, col_btn2 = st.columns([0.8, 1.2])
                     with col_btn1:
                         if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
                             # Déterminer le statut à enregistrer selon le pourcentage
@@ -384,7 +384,7 @@ for statut in ["à faire", "en cours", "terminé"]:
                             nom_fichier_zip = f"Fiche_{slugify(nom_client)}_images.zip"
                     
                             st.download_button(
-                                label="📦 Télécharger toutes les images de cette fiche",
+                                label="📦 Télécharger toutes les images",
                                 data=zip_buffer,
                                 file_name=nom_fichier_zip,
                                 mime="application/zip",
