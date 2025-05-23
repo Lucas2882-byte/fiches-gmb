@@ -158,8 +158,8 @@ with st.form("form_ajout"):
         col1, col2 = st.columns(2)
         with col1:
             ville = st.text_input(f"Ville #{i+1}", key=f"ville_{i}")
-            telephone = st.text_input(f"Téléphone #{i+1}", key=f"tel_{i}")
-            site_web = st.text_input(f"Lien du site internet pour la fiche #{i+1}", key=f"site_{i}")
+            telephone = st.text_input(f"Téléphone #{i+1}", value="En attente", key=f"tel_{i}")
+            site_web = st.text_input(f"Lien du site internet pour la fiche #{i+1}", value="En attente", key=f"site_{i}")
         with col2:
             images = st.file_uploader(f"Images pour la fiche #{i+1}", type=["png", "jpg", "jpeg"], key=f"img_{i}", accept_multiple_files=True)
             
