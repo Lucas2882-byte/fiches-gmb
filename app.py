@@ -48,6 +48,18 @@ PALETTE_COULEURS = [
     "#abb2b9"   # Gris pastel
 ]
 
+def envoyer_notification_discord(message):
+    webhook_url = st.secrets["DISCORD_WEBHOOK"]
+    payload = {"content": message}
+    try:
+        response = requests.post(webhook_url, json=payload)
+        if response.status_code == 204:
+            print("✅ Message envoyé à Discord.")
+        else:
+            print(f"❌ Erreur Discord : {response.status_code}")
+    except Exception as e:
+        print(f"💥 Exception lors de l'envoi à Discord : {e}")
+
 
 
 def couleur_depuis_nom(nom_client):
@@ -401,18 +413,33 @@ for statut in ["à faire", "en cours", "terminé"]:
                         nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"edit_tel_{fiche_id}")
                 
                     with col2:
-                        nouvelle_ville = st.text_input("🏙️ Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
+                        nouvelle_adresse = st.text_input("🏙️ Adresse", value=row[3], key=f"edit_adresse_{fiche_id}")
                         nouveau_site = st.text_input("🌐 Site web", value=row[8] if row[8] else "", key=f"edit_site_{fiche_id}")
                 
                     if st.button("✅ Enregistrer les modifications", key=f"btn_save_infos_{fiche_id}"):
+                        # ⬅️ Récupérer les anciennes valeurs
+                        ancien_nom = row[2]
+                        ancienne_adresse = row[3]
+                
+                        # 🔄 Mise à jour
                         cursor.execute("""
                             UPDATE fiches
                             SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
                             WHERE id = ?
-                        """, (nouveau_nom, row[1], nouvelle_ville, nouveau_tel, nouveau_site, fiche_id))
+                        """, (nouveau_nom, row[1], nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
                         conn.commit()
                         upload_db_to_github()
                         st.success("📝 Informations mises à jour avec succès")
+                
+                        # 📢 Notification si changement détecté
+                        if nouveau_nom != ancien_nom or nouvelle_adresse != ancienne_adresse:
+                            envoyer_notification_discord(
+                                f"✏️ **Fiche #{fiche_id} modifiée**\n"
+                                f"📄 **Nom :** {ancien_nom} → {nouveau_nom}\n"
+                                f"📍 **Adresse :** {ancienne_adresse} → {nouvelle_adresse}"
+                            )
+                
                         st.rerun()
+
 
                     
