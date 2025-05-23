@@ -341,6 +341,38 @@ for statut in ["à faire", "en cours", "terminé"]:
                         upload_db_to_github()
                         st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
                         st.rerun()
+
+                    if row[5]:
+                        urls = row[5].split(";")
+                        zip_buffer = BytesIO()
+                        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                            for i, url in enumerate(urls):
+                                try:
+                                    headers = {"User-Agent": "Mozilla/5.0"}
+                                    response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+                                    ext = url.split(".")[-1].split("?")[0]
+                                    filename = f"image_{i+1}.{ext}"
+    
+                                    if response.status_code == 200 and len(response.content) > 0:
+                                        zip_file.writestr(filename, response.content)
+                                    else:
+                                        st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
+                                except Exception as e:
+                                    st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
+    
+                        zip_buffer.seek(0)
+                        # Déterminer le nom client pour le nom du fichier ZIP
+                        nom_client = row[18] if row[18] else f"id_{row[0]}"
+                        nom_client_slug = slugify(nom_client)
+                        nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
+                        
+                        st.download_button(
+                            label="📦 Télécharger toutes les images de cette fiche",
+                            data=zip_buffer,
+                            file_name=nom_fichier_zip,
+                            mime="application/zip"
+                        )
+                        
                 elif action == "Modifier les informations de la fiche":
                     nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
                     nouvelle_ville = st.text_input("🏙️ Ville", value=row[1], key=f"edit_ville_{fiche_id}")
@@ -358,41 +390,4 @@ for statut in ["à faire", "en cours", "terminé"]:
                         upload_db_to_github()
                         st.success("📝 Informations mises à jour avec succès")
                         st.rerun()
-
-                    
-
-
-
-
-
-                if row[5]:
-                    urls = row[5].split(";")
-                    zip_buffer = BytesIO()
-                    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-                        for i, url in enumerate(urls):
-                            try:
-                                headers = {"User-Agent": "Mozilla/5.0"}
-                                response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-                                ext = url.split(".")[-1].split("?")[0]
-                                filename = f"image_{i+1}.{ext}"
-
-                                if response.status_code == 200 and len(response.content) > 0:
-                                    zip_file.writestr(filename, response.content)
-                                else:
-                                    st.warning(f"❌ Erreur {response.status_code} ou fichier vide : {url}")
-                            except Exception as e:
-                                st.error(f"💥 Erreur lors du téléchargement de {url} : {e}")
-
-                    zip_buffer.seek(0)
-                    # Déterminer le nom client pour le nom du fichier ZIP
-                    nom_client = row[18] if row[18] else f"id_{row[0]}"
-                    nom_client_slug = slugify(nom_client)
-                    nom_fichier_zip = f"Fiche_{nom_client_slug}_images.zip"
-                    
-                    st.download_button(
-                        label="📦 Télécharger toutes les images de cette fiche",
-                        data=zip_buffer,
-                        file_name=nom_fichier_zip,
-                        mime="application/zip"
-                    )
                     
