@@ -16,37 +16,38 @@ import hashlib
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
 PALETTE_COULEURS = [
-    "#e6194b",  # Rouge
-    "#3cb44b",  # Vert
-    "#ffe119",  # Jaune
-    "#4363d8",  # Bleu
-    "#f58231",  # Orange
-    "#911eb4",  # Violet
-    "#46f0f0",  # Cyan
-    "#f032e6",  # Rose
-    "#bcf60c",  # Vert clair
-    "#fabebe",  # Rose pâle
-    "#008080",  # Sarcelle
-    "#e6beff",  # Lavande
-    "#9a6324",  # Marron
-    "#fffac8",  # Crème
-    "#800000",  # Bordeaux
-    "#aaffc3",  # Menthe
-    "#808000",  # Olive
-    "#ffd8b1",  # Pêche
-    "#000075",  # Bleu marine foncé
-    "#808080",  # Gris
-    "#ffffff",  # Blanc
-    "#000000",  # Noir
-    "#a9a9a9",  # Gris foncé
-    "#32cd32",  # Lime
-    "#ff69b4",  # Rose vif
-    "#00ced1",  # Bleu clair saturé
-    "#ffa500",  # Orange vif
-    "#8a2be2",  # Bleu violet
-    "#1e90ff",  # Bleu Dodger
-    "#ff1493"   # Rose profond
+    "#2c3e50",  # Bleu nuit
+    "#34495e",  # Gris foncé bleuté
+    "#7f8c8d",  # Gris modéré
+    "#16a085",  # Vert sarcelle foncé
+    "#27ae60",  # Vert profond
+    "#2980b9",  # Bleu moyen
+    "#8e44ad",  # Violet foncé
+    "#2ecc71",  # Vert clair sobre
+    "#3498db",  # Bleu classique
+    "#9b59b6",  # Lavande foncé
+    "#c0392b",  # Rouge foncé
+    "#d35400",  # Orange brun
+    "#e67e22",  # Orange moyen
+    "#1abc9c",  # Turquoise foncé
+    "#95a5a6",  # Gris clair
+    "#bdc3c7",  # Gris doux
+    "#f39c12",  # Jaune doré
+    "#e74c3c",  # Rouge doux
+    "#ecf0f1",  # Blanc cassé
+    "#f1c40f",  # Jaune foncé
+    "#7d3c98",  # Violet profond
+    "#5dade2",  # Bleu léger
+    "#48c9b0",  # Menthe foncée
+    "#52be80",  # Vert doux
+    "#a569bd",  # Lavande moyen
+    "#f5b041",  # Orange clair
+    "#d98880",  # Rose brun
+    "#f7dc6f",  # Jaune pâle
+    "#85929e",  # Bleu-gris
+    "#abb2b9"   # Gris pastel
 ]
+
 
 
 def couleur_depuis_nom(nom_client):
