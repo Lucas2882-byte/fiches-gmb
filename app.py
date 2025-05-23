@@ -295,52 +295,52 @@ for statut in ["à faire", "en cours", "terminé"]:
                 
                 if action == "Mettre à jour la progression":
             
-                # ✅ Affichage correct avec état vrai ou faux depuis la BDD
-                fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
-                tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
-                photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
-                site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
-            
-                # ✅ Calcul de l'avancement
-                total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
-                progress_percent = int((total_checked / 4) * 100)
-            
-                st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
-                st.progress(progress_percent)
-            
-                if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
-                    # Déterminer le statut à enregistrer selon le pourcentage
-                    if progress_percent == 100:
-                        nouveau_statut = "terminé"
-                    elif progress_percent >= 25:
-                        nouveau_statut = "en cours"
-                    else:
-                        nouveau_statut = "à faire"
-            
-                    # Mise à jour dans la BDD
-                    cursor.execute("""
-                        UPDATE fiches
-                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
-                        WHERE id = ?
-                    """, (
-                        int(fiche_creee),
-                        int(tel_ajoute),
-                        int(photos_ajoutees),
-                        int(site_web_ajoute),
-                        nouveau_statut,
-                        fiche_id
-                    ))
-                    conn.commit()
-                    upload_db_to_github()
-                    st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
-                    st.rerun()
-                    
-                if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
-                    cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
-                    conn.commit()
-                    upload_db_to_github()
-                    st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
-                    st.rerun()
+                    # ✅ Affichage correct avec état vrai ou faux depuis la BDD
+                    fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_{fiche_id}")
+                    tel_ajoute = st.checkbox("📞 Ajout du numéro", value=int(row[14]) == 1, key=f"tel_ajoute_{fiche_id}")
+                    photos_ajoutees = st.checkbox("🖼️ Ajout des photos", value=int(row[15]) == 1, key=f"photos_ajoutees_{fiche_id}")
+                    site_web_ajoute = st.checkbox("🌐 Ajout du site internet", value=int(row[16]) == 1, key=f"site_web_ajoute_{fiche_id}")
+                
+                    # ✅ Calcul de l'avancement
+                    total_checked = sum([fiche_creee, tel_ajoute, photos_ajoutees, site_web_ajoute])
+                    progress_percent = int((total_checked / 4) * 100)
+                
+                    st.markdown(f"<b>📊 Avancement de la fiche : {progress_percent}%</b>", unsafe_allow_html=True)
+                    st.progress(progress_percent)
+                
+                    if st.button("💾 Sauvegarder", key=f"save_btn_{fiche_id}"):
+                        # Déterminer le statut à enregistrer selon le pourcentage
+                        if progress_percent == 100:
+                            nouveau_statut = "terminé"
+                        elif progress_percent >= 25:
+                            nouveau_statut = "en cours"
+                        else:
+                            nouveau_statut = "à faire"
+                
+                        # Mise à jour dans la BDD
+                        cursor.execute("""
+                            UPDATE fiches
+                            SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
+                            WHERE id = ?
+                        """, (
+                            int(fiche_creee),
+                            int(tel_ajoute),
+                            int(photos_ajoutees),
+                            int(site_web_ajoute),
+                            nouveau_statut,
+                            fiche_id
+                        ))
+                        conn.commit()
+                        upload_db_to_github()
+                        st.success(f"✅ État mis à jour avec succès – statut : {nouveau_statut}")
+                        st.rerun()
+                        
+                    if st.button("🗑️ Supprimer cette fiche", key=f"delete_btn_{fiche_id}"):
+                        cursor.execute("DELETE FROM fiches WHERE id = ?", (fiche_id,))
+                        conn.commit()
+                        upload_db_to_github()
+                        st.success(f"🗑️ Fiche {fiche_id} supprimée avec succès.")
+                        st.rerun()
                 elif action == "Modifier les informations de la fiche":
                     nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_{fiche_id}")
                     nouvelle_ville = st.text_input("🏙️ Ville", value=row[1], key=f"edit_ville_{fiche_id}")
