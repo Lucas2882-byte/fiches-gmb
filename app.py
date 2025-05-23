@@ -498,6 +498,25 @@ for statut in ["à faire", "en cours", "terminé"]:
                                 f"🌐 **Site web :** {(row[8] if row[8] else '—')} → {nouveau_site}\n\n"
                                 f"<@314729858863464448> <@1222133249824915509>"
                             )
+                            # ✉️ Envoi email si téléphone ou site web modifié
+                            if nouveau_tel != row[4] or nouveau_site != (row[8] if row[8] else ""):
+                                try:
+                                    envoyer_email_smtp(
+                                        host="smtp.hostinger.com",
+                                        port=465,
+                                        login="contact@lucas-freelance.fr",
+                                        mot_de_passe=st.secrets["SMTP_PASSWORD"],
+                                        destinataire="lmandalorien@gmail.com",
+                                        sujet=f"🔔 Modification fiche client : {row[18] if row[18] else f'id_{fiche_id}'}",
+                                        message=(
+                                            f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
+                                            f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
+                                            f"📞 Téléphone : {row[4]} → {nouveau_tel}\n"
+                                            f"🌐 Site web : {(row[8] if row[8] else '—')} → {nouveau_site}"
+                                        )
+                                    )
+                                except Exception as e:
+                                    st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
                 
                         st.rerun()
 
