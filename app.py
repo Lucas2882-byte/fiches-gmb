@@ -206,6 +206,11 @@ if submitted:
                 url = upload_image_to_github(img_file, safe_filename)
                 if url:
                     image_urls.append(url)
+        taille = len(";".join(image_urls))
+        st.write("Taille image_url :", taille)
+        
+        if taille > 10000:
+            st.warning("⚠️ Attention : La liste d'URLs est très longue, cela peut poser problème à l'enregistrement.")
 
         cursor.execute(
             "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
