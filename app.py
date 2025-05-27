@@ -223,22 +223,17 @@ if submitted:
             "taille image_url": len(";".join(image_urls))
         })
 
-        try:
+        urls_concat = ";".join(image_urls)
+        taille_urls = len(urls_concat)
+        
+        if taille_urls > 1000:
+            st.error("❌ Trop d'images : la chaîne image_url dépasse 1000 caractères.")
+        else:
             cursor.execute(
                 "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now, fiche["site_web"], numero_client)
+                (nom, fiche["ville"], adresse, fiche["telephone"], urls_concat, "à faire", now, fiche["site_web"], numero_client)
             )
-        except Exception as e:
-            st.error(f"❌ ERREUR SQL : {e}")
-            st.write("🔎 Données à insérer :", {
-                "nom": nom,
-                "ville": fiche["ville"],
-                "adresse": adresse,
-                "telephone": fiche["telephone"],
-                "image_url": ";".join(image_urls),
-                "site": fiche["site_web"],
-                "numero_client": numero_client
-            })
+
 
 
     conn.commit()
