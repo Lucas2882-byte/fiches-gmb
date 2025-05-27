@@ -211,6 +211,7 @@ if submitted:
         
         if taille > 10000:
             st.warning("⚠️ Attention : La liste d'URLs est très longue, cela peut poser problème à l'enregistrement.")
+            
         st.write("DEBUG:", {
             "nom": nom,
             "ville": fiche.get("ville"),
