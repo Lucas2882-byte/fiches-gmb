@@ -223,10 +223,23 @@ if submitted:
             "taille image_url": len(";".join(image_urls))
         })
 
-        cursor.execute(
-            "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now, fiche["site_web"], numero_client)
-        )
+        try:
+            cursor.execute(
+                "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (nom, fiche["ville"], adresse, fiche["telephone"], ";".join(image_urls), "à faire", now, fiche["site_web"], numero_client)
+            )
+        except Exception as e:
+            st.error(f"❌ ERREUR SQL : {e}")
+            st.write("🔎 Données à insérer :", {
+                "nom": nom,
+                "ville": fiche["ville"],
+                "adresse": adresse,
+                "telephone": fiche["telephone"],
+                "image_url": ";".join(image_urls),
+                "site": fiche["site_web"],
+                "numero_client": numero_client
+            })
+
 
     conn.commit()
     upload_db_to_github()
