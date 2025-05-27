@@ -211,6 +211,16 @@ if submitted:
         
         if taille > 10000:
             st.warning("⚠️ Attention : La liste d'URLs est très longue, cela peut poser problème à l'enregistrement.")
+        st.write("DEBUG:", {
+            "nom": nom,
+            "ville": fiche.get("ville"),
+            "adresse": adresse,
+            "tel": fiche.get("telephone"),
+            "site": fiche.get("site_web"),
+            "numero_client": numero_client,
+            "image_urls": image_urls,
+            "taille image_url": len(";".join(image_urls))
+        })
 
         cursor.execute(
             "INSERT INTO fiches (nom, ville, adresse, telephone, image_url, statut, date_creation, demande_site_texte, numero_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
