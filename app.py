@@ -17,6 +17,10 @@ from typing import Optional, Dict, List
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
 
+if st.button("🧪 Tester Discord"):
+    ok, details = envoyer_notification_discord("Ping de test depuis l'app")
+    st.write("Discord:", ok, details)
+
 # ✨ Glassmorphism CSS Ultra Moderne
 st.markdown("""
 <style>
