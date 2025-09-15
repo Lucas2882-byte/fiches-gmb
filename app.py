@@ -555,9 +555,6 @@ if submitted:
     except Exception as e:
         st.warning(f"⚠️ Échec de l'envoi de l'email : {e}")
 
-if st.button("🧪 Tester Discord"):
-    ok, details = envoyer_notification_discord("Ping de test depuis l'app")
-    st.write("Discord:", ok, details)
 
 # --- Interface Moderne d'Affichage ---
 st.markdown("""<div style='margin: 2rem 0;'></div>""", unsafe_allow_html=True)
