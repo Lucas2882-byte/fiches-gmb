@@ -558,6 +558,69 @@ def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, mes
         server.login(login, mot_de_passe)
         server.send_message(msg)
 
+# === Notifications unifiées (Discord + Email) ===
+NOTIF_EMAIL_TO = os.environ.get("NOTIF_EMAIL", "lmandalorien@gmail.com")
+SMTP_HOST = "smtp.hostinger.com"
+SMTP_PORT_SSL = 465
+SMTP_LOGIN = "contact@lucas-freelance.fr"
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+
+def _format_embed_as_text(embed: dict) -> str:
+    if not embed:
+        return ""
+    parts = []
+    title = embed.get("title")
+    if title:
+        parts.append(f"**{title}**")
+    desc = embed.get("description")
+    if desc:
+        parts.append(desc)
+    for f in embed.get("fields", []):
+        name = f.get("name", "")
+        value = f.get("value", "")
+        parts.append(f"{name}: {value}")
+    return "\n".join(parts)
+
+def notifier(content: str = None, *, embed: dict = None, subject: str = None, email_to: str = None):
+    """
+    Envoie la notif sur Discord + Email. Retourne (ok_global, details).
+    - content : texte brut (facultatif si embed présent)
+    - embed   : dict embed (optionnel)
+    - subject : sujet de l'email (optionnel)
+    - email_to: destinataire (optionnel, par défaut NOTIF_EMAIL_TO)
+    """
+    # 1) Discord
+    ok_d, details_d = envoyer_notification_discord(content=content, embed=embed)
+
+    # 2) Email
+    to = (email_to or NOTIF_EMAIL_TO).strip()
+    subj = subject or ("Fiches GMB — " + (embed.get("title") if embed and embed.get("title") else "Notification"))
+    body_parts = []
+    if content:
+        body_parts.append(content)
+    if embed:
+        body_parts.append(_format_embed_as_text(embed))
+    body = "\n\n".join([p for p in body_parts if p]) or "(Sans contenu)"
+
+    ok_e, details_e = True, "OK"
+    try:
+        envoyer_email_smtp(
+            host=SMTP_HOST,
+            port=SMTP_PORT_SSL,
+            login=SMTP_LOGIN,
+            mot_de_passe=SMTP_PASSWORD,
+            destinataire=to,
+            sujet=subj,
+            message=body
+        )
+    except Exception as e:
+        ok_e, details_e = False, f"Email ERROR: {e}"
+
+    ok_global = (ok_d and ok_e)
+    details = f"Discord: {details_d} | Email: {details_e}"
+    return ok_global, details
+
+
 # --- Fonction pour nettoyer les noms de fichiers (sans accents, espaces, etc.) ---
 def slugify(value):
     value = str(value)
