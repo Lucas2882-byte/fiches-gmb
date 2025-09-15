@@ -236,9 +236,7 @@ def render_fiche(row, key_prefix="list"):
             <p>📍 <b>Adresse :</b> {row[3]}</p>
             <p>📞 <b>Téléphone :</b> {row[4]}</p>
             <p>🌐 <b>Site :</b> {row[17] if len(row)>17 and row[17] else "—"}</p>
-            st.markdown(f"""
             <p>📅 <b>Ajouté le :</b> {date_creation_str}</p>
-            """, unsafe_allow_html=True)
             
             # === Bouton & décompteur J+30 ===
             if not started_str:
