@@ -430,38 +430,56 @@ def render_fiche(row, key_prefix="list"):
 
                     
                 
-                    # --- Notif Discord sur changements précis ---
+                    # --- Notifs Discord champ par champ + feedback ---
+                    nom_client_msg = nom_client if nom_client and nom_client != "—" else f"id_{fiche_id}"
+                    ville_msg = row[1] or "—"
+                    
+                    def _send(msg):
+                        ok, details = envoyer_notification_discord(msg)
+                        if not ok:
+                            st.warning(f"Discord: {details}")
+                    
+                    # 1/ message récap global si au moins un champ a changé
                     changes = []
                     if nouveau_nom != ancien_nom:
-                        changes.append(f"📄 Nom : {ancien_nom or '—'} → {nouveau_nom or '—'}")
+                        changes.append(f"📄 **Nom** : {ancien_nom or '—'} → {nouveau_nom or '—'}")
                     if nouvelle_adresse != ancienne_adresse:
-                        changes.append(f"📍 Adresse : {ancienne_adresse or '—'} → {nouvelle_adresse or '—'}")
+                        changes.append(f"📍 **Adresse** : {ancienne_adresse or '—'} → {nouvelle_adresse or '—'}")
                     if nouveau_tel != ancien_tel:
-                        changes.append(f"📞 Téléphone : {ancien_tel or '—'} → {nouveau_tel or '—'}")
+                        changes.append(f"📞 **Téléphone** : {ancien_tel or '—'} → {nouveau_tel or '—'}")
                     if nouveau_site != ancien_site:
-                        changes.append(f"🌐 Site web : {ancien_site or '—'} → {nouveau_site or '—'}")
+                        changes.append(f"🌐 **Site web** : {ancien_site or '—'} → {nouveau_site or '—'}")
                     
                     if changes:
-                        # ✅ Discord : message détaillé par champ
-                        envoyer_notification_discord(
+                        _send(
                             "✏️ **Modification de fiche** "
-                            f"#{fiche_id} — **{ancien_nom}** ({row[1]})\n" + "\n".join(changes)
+                            f"#{fiche_id} — **{nom_client_msg}** ({ville_msg})\n" + "\n".join(changes)
                         )
                     
-                    # (Garde ton envoi email actuel si tu veux)
-                    try:
-                        if changes:
-                            envoyer_email_smtp(
-                                host="smtp.hostinger.com",
-                                port=465,
-                                login="contact@lucas-freelance.fr",
-                                mot_de_passe=os.environ.get("SMTP_PASSWORD"),
-                                destinataire="lucaswebsite28@gmail.com",
-                                sujet=f"🔔 Modification fiche client : {nom_client}",
-                                message="\n".join(changes)
+                        # 2/ messages spécifiques par type de champ (si tu veux “une notif par type”)
+                        if nouvelle_adresse != ancienne_adresse:
+                            _send(
+                                f"🏷️ Adresse modifiée pour **{nom_client_msg}** ({ville_msg})\n"
+                                f"**Avant** : {ancienne_adresse or '—'}\n**Après** : {nouvelle_adresse or '—'}"
                             )
-                    except Exception as e:
-                        st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
+                        if nouveau_site != ancien_site:
+                            _send(
+                                f"🕸️ Site modifié pour **{nom_client_msg}** ({ville_msg})\n"
+                                f"**Avant** : {ancien_site or '—'}\n**Après** : {nouveau_site or '—'}"
+                            )
+                        if nouveau_tel != ancien_tel:
+                            _send(
+                                f"☎️ Téléphone modifié pour **{nom_client_msg}** ({ville_msg})\n"
+                                f"**Avant** : {ancien_tel or '—'}\n**Après** : {nouveau_tel or '—'}"
+                            )
+                        if nouveau_nom != ancien_nom:
+                            _send(
+                                f"📝 Nom modifié pour fiche **#{fiche_id}** ({ville_msg})\n"
+                                f"**Avant** : {ancien_nom or '—'}\n**Après** : {nouveau_nom or '—'}"
+                            )
+                    
+                        st.toast("🔔 Notifications Discord envoyées", icon="✅")
+
 
                 
                     st.rerun()
