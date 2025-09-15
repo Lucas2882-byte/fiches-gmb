@@ -236,28 +236,37 @@ def render_fiche(row, key_prefix="list"):
             <p>📍 <b>Adresse :</b> {row[3]}</p>
             <p>📞 <b>Téléphone :</b> {row[4]}</p>
             <p>🌐 <b>Site :</b> {row[17] if len(row)>17 and row[17] else "—"}</p>
+            st.markdown(f"""
             <p>📅 <b>Ajouté le :</b> {date_creation_str}</p>
             """, unsafe_allow_html=True)
-        
+            
             # === Bouton & décompteur J+30 ===
             if not started_str:
                 if st.button("🔴 Démarrer le compteur (30 jours)", key=f"{key_prefix}_start_{fiche_id}", use_container_width=True):
                     start_today = datetime.now().strftime("%Y-%m-%d")
+                    fin_str = date_en_fr(datetime.now() + timedelta(days=30))
                     cursor.execute(
-                        "UPDATE fiches SET compteur_started_at = ?, compteur_jours_total = ? WHERE id = ?",
+                        "UPDATE fiches SET compteur_started_at = ?, compteur_jours_total = ?, compteur_termine_notifie = 0 WHERE id = ?",
                         (start_today, 30, fiche_id)
                     )
                     conn.commit()
                     upload_db_to_github()
+            
+                    # ✅ Notification Discord au démarrage
+                    envoyer_notification_discord(
+                        f"⏱️ **Compteur J+30 démarré** pour la fiche #{fiche_id} — **{row[2]}** ({row[1]}).\n"
+                        f"🗓️ Fin prévue le **{fin_str}**."
+                    )
+            
                     st.success("🚀 Compteur de 30 jours démarré")
                     st.rerun()
             else:
-                fin_txt = date_en_fr(date_fin_compteur) if date_fin_compteur else "—"
+                fin_txt = date_en_fr(datetime.combine(date_fin_compteur, datetime.min.time())) if date_fin_compteur else "—"
                 restants = int(jours_restants) if jours_restants is not None else 30
                 percent_elapsed = int(round(((total_days - restants) / total_days) * 100)) if total_days else 0
                 st.markdown(f"**⏳ Décompte : J-{restants}** (fin prévue le {fin_txt})")
                 st.progress(max(0, min(100, percent_elapsed)))
-        
+
         with col_sep:
             st.markdown("<div class='separator' style='height:400px; margin: 0 auto;'></div>", unsafe_allow_html=True)
 
@@ -515,7 +524,7 @@ def date_en_fr(dt: datetime) -> str:
     }
     return f"{dt.day} {mois_fr[dt.month]} {dt.year}"
 
-# === MIGRATION: colonnes pour le compteur J+30 ===
+# === MIGRATION: colonnes compteur & notif J+30 ===
 def _ensure_column(table, name, type_sql, default_sql=None):
     cols = [r[1] for r in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
     if name not in cols:
@@ -525,16 +534,18 @@ def _ensure_column(table, name, type_sql, default_sql=None):
         cursor.execute(sql)
         conn.commit()
 
-_ensure_column("fiches", "compteur_started_at", "TEXT")           # 'YYYY-MM-DD' quand on démarre
-_ensure_column("fiches", "compteur_jours_total", "INTEGER", 30)   # durée (par défaut 30)
+# déjà ajouté précédemment ? garde-le si oui.
+_ensure_column("fiches", "compteur_started_at", "TEXT")           # 'YYYY-MM-DD'
+_ensure_column("fiches", "compteur_jours_total", "INTEGER", 30)   # durée J+30 (par défaut 30)
+_ensure_column("fiches", "compteur_termine_notifie", "INTEGER", 0)  # 0/1 : notif de fin déjà envoyée ?
 
-# Map nom_colonne -> index (pour SELECT *), à réutiliser dans render_fiche
+# Remap des colonnes (pour retrouver leurs index)
 def _cols_map():
     info = cursor.execute("PRAGMA table_info(fiches)").fetchall()
     names = [r[1] for r in info]
     return {name: i for i, name in enumerate(names)}
-
 COLS = _cols_map()
+
 
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
@@ -741,6 +752,37 @@ else:
     
     for idx, row in enumerate(sorted_rows):
         fiche_id = row[0]
+
+        # --- Compteur J+30 (par fiche) ---
+        idx_started = COLS.get("compteur_started_at")
+        idx_total   = COLS.get("compteur_jours_total")
+        idx_done_nf = COLS.get("compteur_termine_notifie")
+        
+        started_str = row[idx_started] if (idx_started is not None and len(row) > idx_started) else None
+        total_days  = row[idx_total] if (idx_total is not None and len(row) > idx_total and row[idx_total]) else 30
+        deja_notif_fin = (row[idx_done_nf] == 1) if (idx_done_nf is not None and len(row) > idx_done_nf and row[idx_done_nf] is not None) else False
+        
+        jours_restants = None
+        date_fin_compteur = None
+        if started_str:
+            try:
+                dt_start = datetime.strptime(started_str, "%Y-%m-%d").date()
+                today    = datetime.now().date()
+                elapsed  = max(0, (today - dt_start).days)
+                jours_restants = max(0, total_days - elapsed)
+                date_fin_compteur = (dt_start + timedelta(days=total_days))
+        
+                # ✅ Notification automatique le jour où J-0 est atteint (une seule fois)
+                if jours_restants == 0 and not deja_notif_fin:
+                    envoyer_notification_discord(
+                        f"🏁 **Fiche #{fiche_id} — {row[2]} ({row[1]})** a atteint son terme **J+{total_days}** aujourd'hui."
+                    )
+                    cursor.execute("UPDATE fiches SET compteur_termine_notifie = 1 WHERE id = ?", (fiche_id,))
+                    conn.commit()
+                    upload_db_to_github()
+            except Exception:
+                pass
+
         
         # Dictionnaire de mois en français
         mois_fr = {
