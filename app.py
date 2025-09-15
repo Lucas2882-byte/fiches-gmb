@@ -796,6 +796,51 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
+# === 📧 Bloc ultra-simple d'envoi d'email (test) ===
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("📧 Test e-mail (Gmail SMTP)")
+    to = st.text_input("Destinataire", value=ALERT_TO, key="smtp_test_to")
+    subject = st.text_input("Sujet", value="Test SMTP — Fiches GMB", key="smtp_test_subject")
+    body = st.text_area("Message", value="Ceci est un e-mail de test envoyé depuis l'app Streamlit.", height=120, key="smtp_test_body")
+
+    # Un peu d'infos de débogage pour vérifier la config
+    with st.expander("🔧 Voir la config (lecture seule)"):
+        st.write("SMTP host:", SMTP_HOST)
+        st.write("SMTP port:", SMTP_PORT)
+        st.write("From / login:", SMTP_LOGIN)
+        st.write("Password length:", len(SMTP_PASSWORD) if SMTP_PASSWORD else 0)
+
+    if st.button("📨 Envoyer l'e-mail de test", key="smtp_test_send"):
+        try:
+            from email.mime.text import MIMEText
+            import smtplib, ssl, io, contextlib
+
+            msg = MIMEText(body, _charset="utf-8")
+            msg["Subject"] = subject
+            msg["From"] = SMTP_LOGIN
+            msg["To"] = to
+
+            # capture des logs SMTP pour debug
+            log_buf = io.StringIO()
+            with contextlib.redirect_stdout(log_buf):
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
+                    server.set_debuglevel(1)  # log du dialogue SMTP
+                    server.login(SMTP_LOGIN, SMTP_PASSWORD)
+                    server.sendmail(SMTP_LOGIN, [to], msg.as_string())
+
+            st.success(f"✅ E-mail envoyé à {to}")
+            st.code(log_buf.getvalue()[-2000:], language="text")
+
+        except Exception as e:
+            st.error(f"❌ Échec d'envoi : {e}")
+            # Affiche les 2k derniers caractères des logs SMTP si disponibles
+            try:
+                st.code(log_buf.getvalue()[-2000:], language="text")
+            except Exception:
+                pass
+
 
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
