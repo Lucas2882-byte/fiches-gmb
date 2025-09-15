@@ -440,13 +440,7 @@ def render_fiche(row, key_prefix="list"):
                         + f"\n\n📊 **Progression : {progress_percent}%**"
                         + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
                     )
-                    ok_prog, details_prog = message = (
-                        f"📈 **Avancement mis à jour** — Fiche #{fiche_id} — **{nom_client_msg}** ({ville_msg})\n"
-                        + ("\n".join(changes) if changes else "Aucun changement de cases.")
-                        + f"\n\n📊 **Progression : {progress_percent}%**"
-                        + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
-                    )
-                    notifier(message, subject=f"Avancement mis à jour — Fiche #{fiche_id}")
+                    ok_prog, details_prog = notifier(message, subject=f"Avancement mis à jour — Fiche #{fiche_id}")
 
 
                     if not ok_prog:
