@@ -88,8 +88,11 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
     Gère 200/204, 429 (rate-limit) et 5xx avec retry.
     Utilise la variable d'env DISCORD_WEBHOOK si présente, sinon le fallback ci-dessus.
     """
-    url = (DISCORD_WEBHOOK_FALLBACK or "").strip() or os.environ.get("DISCORD_WEBHOOK", "").strip()
-    url = os.environ.get("DISCORD_WEBHOOK", "").strip() or DISCORD_WEBHOOK_FALLBACK
+    # ✅ priorité au fallback (puis ENV si présent)
+    url = (DISCORD_WEBHOOK_FALLBACK or "").strip()
+    env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
+    if env_url:
+        url = env_url
     if not url:
         return False, "Aucun webhook Discord configuré."
 
@@ -470,6 +473,15 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
+    with st.expander("⚙️ Debug Discord"):
+    env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
+    used = (env_url or DISCORD_WEBHOOK_FALLBACK or "").strip()
+    st.write("Source utilisée:", "ENV" if env_url else "FALLBACK")
+    st.code(repr(used))  # montre les caractères invisibles
+    if st.button("🧪 Tester Discord (URL ci-dessus)"):
+        ok, details = envoyer_notification_discord("Ping test ✅")
+        st.write("Résultat:", ok, details)
+
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
 
