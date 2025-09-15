@@ -167,7 +167,7 @@ def render_fiche(row, key_prefix="list"):
 
                 # Calcul progression
                 steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
-                progress_percent = sum(steps) * 20
+                progress_percent = sum(steps) * 25
                 if lien_fiche.strip():
                     progress_percent = 100
 
@@ -175,7 +175,7 @@ def render_fiche(row, key_prefix="list"):
 
                 # Sauvegarde unique
                 if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
-                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 20 else "à faire")
+                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
 
                     # Mise à jour BDD
                     cursor.execute("""
