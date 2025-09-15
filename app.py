@@ -78,7 +78,7 @@ PALETTE_COULEURS = [
 
 
 # === Discord (une seule fonction, robuste) ===
-DISCORD_WEBHOOK_FALLBACK = "https://discord.com/api/webhooks/TON_NOUVEAU_WEBHOOK_ICI"
+DISCORD_WEBHOOK_FALLBACK = "https://discord.com/api/webhooks/1417237278597578864/eh6l8xf_pasAiIcMxjgOeBVD9mRGp5YfvJeyA6Sdwpjh_8XLOwAEj8nnUDnQpOv27MHZ"
 
 def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_retries=3):
     """
