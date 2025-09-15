@@ -14,12 +14,11 @@ from email.mime.text import MIMEText
 import hashlib
 import json
 from typing import Optional, Dict, List
-# --- SMTP config centralisée (Gmail) ---
 # --- Config email centralisée (Gmail) ---
 SMTP_HOST = st.secrets.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(st.secrets.get("SMTP_PORT", 465))
 SMTP_LOGIN = st.secrets.get("SMTP_LOGIN", "lucaswebsite28@gmail.com")
-# ⚠️ retire les espaces au cas où ils ont été collés
+# si jamais le secret contient des espaces, on les retire
 SMTP_PASSWORD = (st.secrets.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "").replace(" ", "")
 ALERT_TO = st.secrets.get("ALERT_TO", "lmandalorien@gmail.com")
 
@@ -625,13 +624,7 @@ def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, mes
         server.login(login, mot_de_passe)
         server.send_message(msg)
 
-# === Notifications unifiées (Discord + Email) ===
-NOTIF_EMAIL_TO = os.environ.get("NOTIF_EMAIL", "lmandalorien@gmail.com")
-# Après (Gmail)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT_SSL = 465
-SMTP_LOGIN = "lucaswebsite28@gmail.com"
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")  # mets ici un APP PASSWORD Gmail
+
 
 def _format_embed_as_text(embed: dict) -> str:
     if not embed:
