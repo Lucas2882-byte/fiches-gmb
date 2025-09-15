@@ -564,10 +564,11 @@ def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, mes
 
 # === Notifications unifiées (Discord + Email) ===
 NOTIF_EMAIL_TO = os.environ.get("NOTIF_EMAIL", "lmandalorien@gmail.com")
-SMTP_HOST = "smtp.hostinger.com"
+# Après (Gmail)
+SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT_SSL = 465
-SMTP_LOGIN = "contact@lucas-freelance.fr"
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+SMTP_LOGIN = "lucaswebsite28@gmail.com"
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")  # mets ici un APP PASSWORD Gmail
 
 def _format_embed_as_text(embed: dict) -> str:
     if not embed:
