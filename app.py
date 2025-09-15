@@ -83,21 +83,15 @@ def _get_discord_webhook() -> Optional[str]:
         return url
     return DISCORD_WEBHOOK_FALLBACK
 
-def envoyer_notification_discord(
-    content: Optional[str] = None,
-    *,
-    embed: Optional[Dict] = None,
-    timeout: int = 10,
-    max_retries: int = 3
-) -> None:
+def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_retries=3):
     """
-    Envoie un message (content + embed) sur UN seul webhook (env > fallback).
-    Gère 429/5xx avec retry exponentiel simple.
+    Renvoie (ok: bool, details: str). Loggue le code HTTP et la réponse.
     """
-    url = _get_discord_webhook()
+    url = os.environ.get("DISCORD_WEBHOOK", "").strip() or \
+          "https://discord.com/api/webhooks/1417237278597578864/eh6l8xf_pasAiIcMxjgOeBVD9mRGp5YfvJeyA6Sdwpjh_8XLOwAEj8nnUDnQpOv27MHZ"
+
     if not url:
-        print("⚠️ Aucun webhook Discord configuré.")
-        return
+        return False, "Aucun webhook Discord configuré."
 
     payload = {"content": content or ""}
     if embed:
@@ -107,37 +101,33 @@ def envoyer_notification_discord(
 
     for attempt in range(1, max_retries + 1):
         try:
-            resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=timeout)
+            resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code in (200, 204):
-                print("✅ Message Discord envoyé.")
-                return
+                return True, f"Discord OK ({resp.status_code})."
             if resp.status_code == 429:
-                # Respecte 'retry_after' si fourni
-                wait = 1.0
+                retry_after = 1.0
                 try:
-                    data = resp.json()
-                    wait = float(data.get("retry_after", 1.0))
+                    retry_after = float(resp.json().get("retry_after", 1.0))
                 except Exception:
                     pass
-                time.sleep(max(wait, 1.0))
+                time.sleep(max(retry_after, 1.0))
                 continue
             if 500 <= resp.status_code < 600:
                 time.sleep(min(2 ** attempt, 8))
                 continue
-            print(f"❌ Discord {resp.status_code}: {resp.text[:200]}")
-            return
+            return False, f"Discord {resp.status_code}: {resp.text[:300]}"
         except Exception as e:
-            print(f"💥 Discord exception: {e} (tentative {attempt}/{max_retries})")
             time.sleep(min(2 ** attempt, 8))
+            last_err = str(e)
+    return False, f"Exception lors de l'envoi Discord: {last_err}"
+
+
+
 def date_en_fr(dt: datetime) -> str:
-    mois_fr = {
-        1:"janvier",2:"février",3:"mars",4:"avril",5:"mai",6:"juin",
-        7:"juillet",8:"août",9:"septembre",10:"octobre",11:"novembre",12:"décembre"
-    }
+    mois_fr = {1:"janvier",2:"février",3:"mars",4:"avril",5:"mai",6:"juin",7:"juillet",8:"août",9:"septembre",10:"octobre",11:"novembre",12:"décembre"}
     return f"{dt.day} {mois_fr[dt.month]} {dt.year}"
 
-def embed_fiche_terminee(row) -> Dict:
-    """Construit un embed Discord avec les infos de la fiche."""
+def embed_fiche_terminee(row):
     def col(i, default="—"):
         return (row[i] if len(row) > i and row[i] not in (None, "") else default)
 
@@ -152,7 +142,6 @@ def embed_fiche_terminee(row) -> Dict:
     site_web   = col(17, "—")
     client     = col(18, f"id_{fiche_id}")
 
-    # Dates
     try:
         date_creation = datetime.strptime(date_str, "%Y-%m-%d") if date_str else datetime.now()
     except Exception:
@@ -160,18 +149,17 @@ def embed_fiche_terminee(row) -> Dict:
     date_fin_30  = date_creation + timedelta(days=30)
     date_avis_10 = datetime.now() + timedelta(days=10)
 
-    # Miniature si dispo
     thumb_url = None
     if image_urls:
         parts = [p for p in image_urls.split(";") if p.strip()]
         if parts:
             thumb_url = parts[0]
 
-    embed = {
+    return {
         "title": "✅ Fiche terminée",
         "description": f"**Prête à recevoir des avis dans 10 jours — le {date_en_fr(date_avis_10)}.**",
-        "color": 0x57F287,  # vert
-        "timestamp": datetime.utcnow().isoformat(),
+        "color": 0x57F287,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
         "fields": [
             {"name": "Client", "value": client, "inline": True},
             {"name": "Nom", "value": nom_fiche, "inline": True},
@@ -183,10 +171,8 @@ def embed_fiche_terminee(row) -> Dict:
             {"name": "Fin J+30", "value": date_en_fr(date_fin_30), "inline": True},
         ],
         "footer": {"text": f"GMB • Fiche #{fiche_id} • Statut: {statut}"},
+        **({"thumbnail": {"url": thumb_url}} if thumb_url else {})
     }
-    if thumb_url:
-        embed["thumbnail"] = {"url": thumb_url}
-    return embed
 
 def render_fiche(row, key_prefix="list"):
     """
@@ -275,25 +261,17 @@ def render_fiche(row, key_prefix="list"):
                     )
 
                 # Calcul progression (25% par étape)
+                # Calcul progression (25% par étape) – tu l’as déjà
                 steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
                 progress_percent = sum(1 for s in steps if s) * 25
-                st.progress(progress_percent / 100.0, text=f"Progression : {progress_percent}%")
-
-
-                # Sauvegarde unique
+                
                 if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
-                    # Statut en fonction de la progression
                     nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
                     ancien_statut = row[7] if len(row) > 7 else None
                 
-                    # Mise à jour BDD (sans lien final)
                     cursor.execute("""
                         UPDATE fiches
-                        SET creation_fiche = ?, 
-                            ajout_numero = ?, 
-                            ajout_photos = ?, 
-                            ajout_site = ?, 
-                            statut = ?
+                        SET creation_fiche = ?, ajout_numero = ?, ajout_photos = ?, ajout_site = ?, statut = ?
                         WHERE id = ?
                     """, (
                         1 if creation_fiche else 0,
@@ -306,18 +284,25 @@ def render_fiche(row, key_prefix="list"):
                     conn.commit()
                     upload_db_to_github()
                 
-                    # 🔔 Discord si on vient d'atteindre 100%
+                    # 🔔 Envoi Discord si on vient d'atteindre 100%
                     if progress_percent == 100 and ancien_statut != "terminé":
-                        try:
-                            envoyer_notification_discord(
-                                content=None,
-                                embed=embed_fiche_terminee(row)
-                            )
-                        except Exception as e:
-                            st.warning(f"⚠️ Notification Discord échouée : {e}")
+                        # D'abord un message texte (robuste), puis l'embed
+                        ok_txt, details_txt = envoyer_notification_discord(
+                            f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours."
+                        )
+                        if not ok_txt:
+                            st.warning(f"Discord (texte) a échoué : {details_txt}")
+                
+                        ok_embed, details_embed = envoyer_notification_discord(
+                            content=None,
+                            embed=embed_fiche_terminee(row)
+                        )
+                        if not ok_embed:
+                            st.warning(f"Discord (embed) a échoué : {details_embed}")
                 
                     st.success("✅ Progression enregistrée")
                     st.rerun()
+
 
 
 
