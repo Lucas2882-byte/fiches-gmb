@@ -158,18 +158,10 @@ def render_fiche(row, key_prefix="list"):
                         key=f"{key_prefix}_site_{fiche_id}"
                     )
 
-                # Lien fiche terminée
-                lien_fiche = st.text_input(
-                    "🔗 Lien de la fiche (pour atteindre 100%)",
-                    value=st.session_state.get(f"{key_prefix}_lien_{fiche_id}", lien_en_bdd or ""),
-                    key=f"{key_prefix}_lien_{fiche_id}"
-                )
-
-                # Calcul progression
+                # Calcul progression (25% par étape)
                 steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
-                progress_percent = sum(steps) * 25
-                if lien_fiche.strip():
-                    progress_percent = 100
+                progress_percent = sum(1 for s in steps if s) * 25
+
 
                 st.progress(progress_percent / 100.0, text=f"Progression : {progress_percent}%")
 
