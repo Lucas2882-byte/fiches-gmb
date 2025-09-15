@@ -319,78 +319,78 @@ def render_fiche(row, key_prefix="list"):
 
 
             # === 2) MODIFIER LES INFOS ===
-else:
-    # Clés stables par fiche pour mémoriser les valeurs entre les reruns
-    nom_key  = f"{key_prefix}_edit_nom_{fiche_id}"
-    tel_key  = f"{key_prefix}_edit_tel_{fiche_id}"
-    adr_key  = f"{key_prefix}_edit_adresse_{fiche_id}"
-    site_key = f"{key_prefix}_edit_site_{fiche_id}"
-
-    # Initialisation ONE-SHOT
-    if nom_key not in st.session_state:
-        st.session_state[nom_key]  = (row[2] or "")
-    if tel_key not in st.session_state:
-        st.session_state[tel_key]  = (row[4] or "")
-    if adr_key not in st.session_state:
-        st.session_state[adr_key]  = (row[3] or "")
-    if site_key not in st.session_state:
-        st.session_state[site_key] = ((row[17] if len(row) > 17 else "") or "")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.text_input("📄 Nom", key=nom_key)
-        st.text_input("📞 Téléphone", key=tel_key)
-    with col2:
-        st.text_input("🏙️ Adresse", key=adr_key)
-        st.text_input("🌐 Site web", key=site_key)
-
-    if st.button("✅ Enregistrer les modifications", key=f"{key_prefix}_btn_save_infos_{fiche_id}"):
-        nouveau_nom      = st.session_state[nom_key]
-        nouveau_tel      = st.session_state[tel_key]
-        nouvelle_adresse = st.session_state[adr_key]
-        nouveau_site     = st.session_state[site_key]
-
-        ancien_nom       = row[2]
-        ancienne_adresse = row[3]
-        ancien_tel       = row[4]
-        ancien_site      = (row[17] if len(row) > 17 else "")
-
-        cursor.execute("""
-            UPDATE fiches
-            SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
-            WHERE id = ?
-        """, (nouveau_nom, row[1], nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
-        conn.commit()
-        upload_db_to_github()
-
-        # Réaligne session_state
-        st.session_state[nom_key]  = nouveau_nom
-        st.session_state[tel_key]  = nouveau_tel
-        st.session_state[adr_key]  = nouvelle_adresse
-        st.session_state[site_key] = nouveau_site
-
-        st.success("📝 Informations mises à jour avec succès")
-
-        try:
-            if (nouveau_nom != ancien_nom) or (nouvelle_adresse != ancienne_adresse) or (nouveau_site != ancien_site) or (nouveau_tel != ancien_tel):
-                envoyer_email_smtp(
-                    host="smtp.hostinger.com",
-                    port=465,
-                    login="contact@lucas-freelance.fr",
-                    mot_de_passe=os.environ.get("SMTP_PASSWORD"),
-                    destinataire="lucaswebsite28@gmail.com",
-                    sujet=f"🔔 Modification fiche client : {nom_client}",
-                    message=(
-                        f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
-                        f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
-                        f"📞 Téléphone : {ancien_tel} → {nouveau_tel}\n"
-                        f"🌐 Site web : {ancien_site or '—'} → {nouveau_site or '—'}"
-                    )
-                )
-        except Exception as e:
-            st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
-
-        st.rerun()
+            else:
+                # Clés stables par fiche pour mémoriser les valeurs entre les reruns
+                nom_key  = f"{key_prefix}_edit_nom_{fiche_id}"
+                tel_key  = f"{key_prefix}_edit_tel_{fiche_id}"
+                adr_key  = f"{key_prefix}_edit_adresse_{fiche_id}"
+                site_key = f"{key_prefix}_edit_site_{fiche_id}"
+            
+                # Initialisation ONE-SHOT
+                if nom_key not in st.session_state:
+                    st.session_state[nom_key]  = (row[2] or "")
+                if tel_key not in st.session_state:
+                    st.session_state[tel_key]  = (row[4] or "")
+                if adr_key not in st.session_state:
+                    st.session_state[adr_key]  = (row[3] or "")
+                if site_key not in st.session_state:
+                    st.session_state[site_key] = ((row[17] if len(row) > 17 else "") or "")
+            
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.text_input("📄 Nom", key=nom_key)
+                    st.text_input("📞 Téléphone", key=tel_key)
+                with col2:
+                    st.text_input("🏙️ Adresse", key=adr_key)
+                    st.text_input("🌐 Site web", key=site_key)
+            
+                if st.button("✅ Enregistrer les modifications", key=f"{key_prefix}_btn_save_infos_{fiche_id}"):
+                    nouveau_nom      = st.session_state[nom_key]
+                    nouveau_tel      = st.session_state[tel_key]
+                    nouvelle_adresse = st.session_state[adr_key]
+                    nouveau_site     = st.session_state[site_key]
+            
+                    ancien_nom       = row[2]
+                    ancienne_adresse = row[3]
+                    ancien_tel       = row[4]
+                    ancien_site      = (row[17] if len(row) > 17 else "")
+            
+                    cursor.execute("""
+                        UPDATE fiches
+                        SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
+                        WHERE id = ?
+                    """, (nouveau_nom, row[1], nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
+                    conn.commit()
+                    upload_db_to_github()
+            
+                    # Réaligne session_state
+                    st.session_state[nom_key]  = nouveau_nom
+                    st.session_state[tel_key]  = nouveau_tel
+                    st.session_state[adr_key]  = nouvelle_adresse
+                    st.session_state[site_key] = nouveau_site
+            
+                    st.success("📝 Informations mises à jour avec succès")
+            
+                    try:
+                        if (nouveau_nom != ancien_nom) or (nouvelle_adresse != ancienne_adresse) or (nouveau_site != ancien_site) or (nouveau_tel != ancien_tel):
+                            envoyer_email_smtp(
+                                host="smtp.hostinger.com",
+                                port=465,
+                                login="contact@lucas-freelance.fr",
+                                mot_de_passe=os.environ.get("SMTP_PASSWORD"),
+                                destinataire="lucaswebsite28@gmail.com",
+                                sujet=f"🔔 Modification fiche client : {nom_client}",
+                                message=(
+                                    f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
+                                    f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
+                                    f"📞 Téléphone : {ancien_tel} → {nouveau_tel}\n"
+                                    f"🌐 Site web : {ancien_site or '—'} → {nouveau_site or '—'}"
+                                )
+                            )
+                    except Exception as e:
+                        st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
+            
+                    st.rerun()
 
 
 
