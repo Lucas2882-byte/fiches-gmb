@@ -179,6 +179,26 @@ def render_fiche(row, key_prefix="list"):
     """
     fiche_id = row[0]
 
+    # --- Compteur J+30 (par fiche) ---
+    idx_started = COLS.get("compteur_started_at")
+    idx_total   = COLS.get("compteur_jours_total")
+    
+    started_str = row[idx_started] if (idx_started is not None and len(row) > idx_started) else None
+    total_days  = row[idx_total] if (idx_total is not None and len(row) > idx_total and row[idx_total]) else 30
+    
+    jours_restants = None
+    date_fin_compteur = None
+    if started_str:
+        try:
+            dt_start = datetime.strptime(started_str, "%Y-%m-%d").date()
+            today    = datetime.now().date()
+            elapsed  = max(0, (today - dt_start).days)
+            jours_restants = max(0, total_days - elapsed)
+            date_fin_compteur = (dt_start + timedelta(days=total_days))
+        except Exception:
+            pass
+
+
     # --- Dates (création + fin J+30) ---
     try:
         date_creation = datetime.strptime(row[6], "%Y-%m-%d")
@@ -216,12 +236,31 @@ def render_fiche(row, key_prefix="list"):
             <p>📍 <b>Adresse :</b> {row[3]}</p>
             <p>📞 <b>Téléphone :</b> {row[4]}</p>
             <p>🌐 <b>Site :</b> {row[17] if len(row)>17 and row[17] else "—"}</p>
-            <p>📅 <b>Date d'ajout :</b> {date_creation_str}</p>
-            <p style='color:#ff6b6b; font-weight: 600;'>🛑 <b>Date de fin :</b> {date_fin_str}</p>
+            <p>📅 <b>Ajouté le :</b> {date_creation_str}</p>
             """, unsafe_allow_html=True)
-
+        
+            # === Bouton & décompteur J+30 ===
+            if not started_str:
+                if st.button("🔴 Démarrer le compteur (30 jours)", key=f"{key_prefix}_start_{fiche_id}", use_container_width=True):
+                    start_today = datetime.now().strftime("%Y-%m-%d")
+                    cursor.execute(
+                        "UPDATE fiches SET compteur_started_at = ?, compteur_jours_total = ? WHERE id = ?",
+                        (start_today, 30, fiche_id)
+                    )
+                    conn.commit()
+                    upload_db_to_github()
+                    st.success("🚀 Compteur de 30 jours démarré")
+                    st.rerun()
+            else:
+                fin_txt = date_en_fr(date_fin_compteur) if date_fin_compteur else "—"
+                restants = int(jours_restants) if jours_restants is not None else 30
+                percent_elapsed = int(round(((total_days - restants) / total_days) * 100)) if total_days else 0
+                st.markdown(f"**⏳ Décompte : J-{restants}** (fin prévue le {fin_txt})")
+                st.progress(max(0, min(100, percent_elapsed)))
+        
         with col_sep:
             st.markdown("<div class='separator' style='height:400px; margin: 0 auto;'></div>", unsafe_allow_html=True)
+
 
         with col_right:
             action = st.selectbox(
