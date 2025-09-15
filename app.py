@@ -237,6 +237,7 @@ def render_fiche(row, key_prefix="list"):
             <p>📞 <b>Téléphone :</b> {row[4]}</p>
             <p>🌐 <b>Site :</b> {row[17] if len(row)>17 and row[17] else "—"}</p>
             <p>📅 <b>Ajouté le :</b> {date_creation_str}</p>
+            """, unsafe_allow_html=True)  # ⬅️ ICI on ferme bien la triple-quoted string
             
             # === Bouton & décompteur J+30 ===
             idx_done_nf = COLS.get("compteur_termine_notifie")
@@ -701,13 +702,16 @@ if submitted:
 # --- Interface Moderne d'Affichage ---
 st.markdown("""<div style='margin: 2rem 0;'></div>""", unsafe_allow_html=True)
 
-# Barre de recherche moderne
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align: center; margin-bottom: 2rem;'>
     <h2 style='color: #ffffff; font-weight: 300; margin-bottom: 0.5rem;'>🔍 Recherche Intelligente</h2>
     <p style='color: #888888; font-size: 0.9rem;'>Trouvez rapidement une fiche par ville, nom ou client</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 # Widget de recherche stylé
 search_col1, search_col2, search_col3 = st.columns([1, 2, 1])
