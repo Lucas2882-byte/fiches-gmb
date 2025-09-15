@@ -79,20 +79,12 @@ PALETTE_COULEURS = [
 
 
 
-# === Discord (une seule fonction, robuste) ===
-DISCORD_WEBHOOK_FALLBACK = "https://discord.com/api/webhooks/1417242287876079666/Fpmq9MmP-D-LtV6wdaX6EbgWwFnAPtAd1n0GAsx2MzC9wf2KT-4MylS0VWairsyQdFPj"
+# === Discord : envoi robuste (priorité à l'ENV DISCORD_WEBHOOK) ===
+DISCORD_WEBHOOK_FALLBACK = ""  # optionnel; laisse vide si tu utilises les secrets
 
 def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_retries=3):
-    """
-    Renvoie (ok: bool, details: str). Envoie content et/ou embed.
-    Gère 200/204, 429 (rate-limit) et 5xx avec retry.
-    Utilise la variable d'env DISCORD_WEBHOOK si présente, sinon le fallback ci-dessus.
-    """
-    # === à mettre dans envoyer_notification_discord ===
-    # Forcer l’usage du fallback, ignorer l’ENV (temporaire le temps de corriger l’ENV)
-    url = (DISCORD_WEBHOOK_FALLBACK or "").strip()
-    if env_url:
-        url = env_url
+    env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
+    url = env_url or (DISCORD_WEBHOOK_FALLBACK or "").strip()
     if not url:
         return False, "Aucun webhook Discord configuré."
 
@@ -125,11 +117,6 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
             time.sleep(min(2 ** attempt, 8))
     return False, f"Exception lors de l'envoi Discord: {last_err}"
 
-def _get_discord_webhook() -> Optional[str]:
-    url = os.environ.get("DISCORD_WEBHOOK", "").strip()
-    if url:
-        return url
-    return DISCORD_WEBHOOK_FALLBACK
 
 
 
@@ -183,6 +170,7 @@ def embed_fiche_terminee(row):
         "footer": {"text": f"GMB • Fiche #{fiche_id} • Statut: {statut}"},
         **({"thumbnail": {"url": thumb_url}} if thumb_url else {})
     }
+
 
 def render_fiche(row, key_prefix="list"):
     """
@@ -271,13 +259,13 @@ def render_fiche(row, key_prefix="list"):
                     )
 
                 # Calcul progression (25% par étape)
-                # Calcul progression (25% par étape) – tu l’as déjà
+                # ... dans render_fiche, case "Mettre à jour la progression"
                 steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
                 progress_percent = sum(1 for s in steps if s) * 25
                 
                 if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
-                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
                     ancien_statut = row[7] if len(row) > 7 else None
+                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
                 
                     cursor.execute("""
                         UPDATE fiches
@@ -294,24 +282,21 @@ def render_fiche(row, key_prefix="list"):
                     conn.commit()
                     upload_db_to_github()
                 
-                    # 🔔 Envoi Discord si on vient d'atteindre 100%
+                    # 🔔 Discord si on vient d'atteindre 100%
                     if progress_percent == 100 and ancien_statut != "terminé":
-                        # D'abord un message texte (robuste), puis l'embed
-                        ok_txt, details_txt = envoyer_notification_discord(
+                        # 1) petit texte
+                        envoyer_notification_discord(
                             f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours."
                         )
-                        if not ok_txt:
-                            st.warning(f"Discord (texte) a échoué : {details_txt}")
-                
-                        ok_embed, details_embed = envoyer_notification_discord(
+                        # 2) embed détaillé
+                        envoyer_notification_discord(
                             content=None,
                             embed=embed_fiche_terminee(row)
                         )
-                        if not ok_embed:
-                            st.warning(f"Discord (embed) a échoué : {details_embed}")
                 
                     st.success("✅ Progression enregistrée")
                     st.rerun()
+
 
 
 
@@ -473,14 +458,6 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
-with st.expander("⚙️ Debug Discord"):
-    env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
-    used = (env_url or DISCORD_WEBHOOK_FALLBACK or "").strip()
-    st.write("Source utilisée:", "ENV" if env_url else "FALLBACK")
-    st.code(repr(used))  # montre les caractères invisibles
-    if st.button("🧪 Tester Discord (URL ci-dessus)"):
-        ok, details = envoyer_notification_discord("Ping test ✅")
-        st.write("Résultat:", ok, details)
 
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
