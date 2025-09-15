@@ -88,6 +88,7 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
     Gère 200/204, 429 (rate-limit) et 5xx avec retry.
     Utilise la variable d'env DISCORD_WEBHOOK si présente, sinon le fallback ci-dessus.
     """
+    url = (DISCORD_WEBHOOK_FALLBACK or "").strip() or os.environ.get("DISCORD_WEBHOOK", "").strip()
     url = os.environ.get("DISCORD_WEBHOOK", "").strip() or DISCORD_WEBHOOK_FALLBACK
     if not url:
         return False, "Aucun webhook Discord configuré."
