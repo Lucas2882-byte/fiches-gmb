@@ -803,57 +803,46 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
-# === Test d'envoi d'email (et Discord en option) ===
+import io, contextlib
+from email.mime.text import MIMEText
+
 with st.sidebar:
     st.markdown("---")
-    st.subheader("📧 Test d'envoi d'email")
+    st.subheader("📧 Test SMTP")
 
-    test_to = st.text_input(
-        "Destinataire",
-        value=ALERT_TO,
-        key="test_mail_to"
-    )
-    test_subject = st.text_input(
-        "Sujet",
-        value="Test SMTP — Fiches GMB",
-        key="test_mail_subject"
-    )
-    test_body = st.text_area(
-        "Message",
-        value="Ceci est un test d'envoi SMTP depuis l'app Streamlit.",
-        height=120,
-        key="test_mail_body"
-    )
-    also_discord = st.checkbox("Envoyer aussi sur Discord", value=False, key="test_mail_also_discord")
+    test_to = st.text_input("Destinataire", value=ALERT_TO, key="smtp_test_to")
+    test_subject = st.text_input("Sujet", value="Test SMTP — Fiches GMB", key="smtp_test_subject")
+    test_body = st.text_area("Message", value="Ceci est un test SMTP depuis l'app.", height=120, key="smtp_test_body")
 
-    if st.button("📧 Envoyer un email de test", key="btn_test_mail"):
+    # Petit récap (sans exposer le password)
+    with st.expander("🔧 Debug config"):
+        st.write("From:", SMTP_LOGIN)
+        st.write("To:", test_to)
+        st.write("Host/Port:", SMTP_HOST, SMTP_PORT)
+        st.write("App password length:", len(SMTP_PASSWORD))
+
+    if st.button("📧 Envoyer un email de test", key="smtp_btn_test"):
         try:
-            if also_discord:
-                # Utilise le helper unifié -> envoie Email + Discord
-                ok, details = notifier(
-                    content=test_body,
-                    subject=test_subject,
-                    email_to=test_to
-                )
-                if ok:
-                    st.success("✅ Email + Discord envoyés.")
-                else:
-                    st.error(f"❌ Échec: {details}")
-            else:
-                # Email seul
-                envoyer_email_smtp(
-                    host=SMTP_HOST,
-                    port=SMTP_PORT,
-                    login=SMTP_LOGIN,
-                    mot_de_passe=SMTP_PASSWORD,
-                    destinataire=test_to,
-                    sujet=test_subject,
-                    message=test_body
-                )
-                st.success(f"✅ Email envoyé à {test_to}")
+            # Construire l'email
+            msg = MIMEText(test_body)
+            msg["Subject"] = test_subject
+            msg["From"] = SMTP_LOGIN
+            msg["To"] = test_to
+
+            # Capture du transcript SMTP (utile si ça rate)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+                    server.set_debuglevel(1)  # transcript dans stdout
+                    server.login(SMTP_LOGIN, SMTP_PASSWORD)
+                    server.sendmail(SMTP_LOGIN, [test_to], msg.as_string())
+
+            st.success(f"✅ Email envoyé à {test_to}")
+            st.code(buf.getvalue()[-4000:], language="text")  # on affiche la fin du transcript
         except Exception as e:
             st.error(f"❌ Échec d'envoi : {e}")
-            st.info("Astuce Gmail: utilisez un mot de passe d’application (sans espaces).")
+            st.info("Vérifie : 2FA activée sur Gmail + mot de passe d'application (16 caractères, SANS espaces).")
+
 
 
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
