@@ -260,8 +260,13 @@ def render_fiche(row, key_prefix="list"):
 
                 # Calcul progression (25% par étape)
                 # ... dans render_fiche, case "Mettre à jour la progression"
+                # ... dans render_fiche, case "Mettre à jour la progression"
                 steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
                 progress_percent = sum(1 for s in steps if s) * 25
+                
+                # 🔹 Jauge d'avancement (affichage)
+                st.markdown(f"<b>📊 Avancement : {progress_percent}%</b>", unsafe_allow_html=True)
+                st.progress(progress_percent)
                 
                 if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
                     ancien_statut = row[7] if len(row) > 7 else None
@@ -296,6 +301,7 @@ def render_fiche(row, key_prefix="list"):
                 
                     st.success("✅ Progression enregistrée")
                     st.rerun()
+
 
 
 
