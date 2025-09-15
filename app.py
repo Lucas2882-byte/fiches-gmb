@@ -795,6 +795,58 @@ def upload_db_to_github():
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
+# === Test d'envoi d'email (et Discord en option) ===
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("📧 Test d'envoi d'email")
+
+    test_to = st.text_input(
+        "Destinataire",
+        value=ALERT_TO,
+        key="test_mail_to"
+    )
+    test_subject = st.text_input(
+        "Sujet",
+        value="Test SMTP — Fiches GMB",
+        key="test_mail_subject"
+    )
+    test_body = st.text_area(
+        "Message",
+        value="Ceci est un test d'envoi SMTP depuis l'app Streamlit.",
+        height=120,
+        key="test_mail_body"
+    )
+    also_discord = st.checkbox("Envoyer aussi sur Discord", value=False, key="test_mail_also_discord")
+
+    if st.button("📧 Envoyer un email de test", key="btn_test_mail"):
+        try:
+            if also_discord:
+                # Utilise le helper unifié -> envoie Email + Discord
+                ok, details = notifier(
+                    content=test_body,
+                    subject=test_subject,
+                    email_to=test_to
+                )
+                if ok:
+                    st.success("✅ Email + Discord envoyés.")
+                else:
+                    st.error(f"❌ Échec: {details}")
+            else:
+                # Email seul
+                envoyer_email_smtp(
+                    host=SMTP_HOST,
+                    port=SMTP_PORT,
+                    login=SMTP_LOGIN,
+                    mot_de_passe=SMTP_PASSWORD,
+                    destinataire=test_to,
+                    sujet=test_subject,
+                    message=test_body
+                )
+                st.success(f"✅ Email envoyé à {test_to}")
+        except Exception as e:
+            st.error(f"❌ Échec d'envoi : {e}")
+            st.info("Astuce Gmail: utilisez un mot de passe d’application (sans espaces).")
+
 
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
