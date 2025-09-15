@@ -268,6 +268,8 @@ def render_fiche(row, key_prefix="list"):
     nom_client = row[18] if len(row) > 18 and row[18] else "—"
     couleur_client = couleur_depuis_nom(nom_client) if nom_client != "—" else "#555"
 
+    nom_client_msg = nom_client if nom_client and nom_client != "—" else (row[2] or f"id_{fiche_id}")
+
     # --- Récup flags progression (indices tels que dans ton code actuel) ---
     # NOTE: si tu passes à sqlite3.Row, utilise row["creation_fiche"] etc.
     creation_fiche_val = int(row[13]) == 1 if len(row) > 13 and row[13] is not None else False
@@ -311,7 +313,7 @@ def render_fiche(row, key_prefix="list"):
             
                     # Discord au démarrage
                     notifier(
-                        f"⏱️ **Compteur J+30 démarré** pour la fiche #{fiche_id} — **{row[2]}** ({row[1]}).\n"
+                        f"⏱️ **Compteur J+30 démarré** pour **{nom_client_msg}** ({row[1]}).\n"
                         f"🗓️ Fin prévue le **{fin_str}**.",
                         subject=f"Démarrage compteur — Fiche #{fiche_id}"
                     )
@@ -334,7 +336,7 @@ def render_fiche(row, key_prefix="list"):
                     deja_notif_fin = (row[idx_done_nf] == 1)
                 if restants == 0 and not deja_notif_fin:
                     envoyer_notification_discord(
-                        f"🏁 **Fiche #{fiche_id} — {row[2]} ({row[1]})** a atteint son terme **J+{total_days}** aujourd'hui."
+                        f"🏁 **{nom_client_msg}** ({row[1]}) a atteint son terme **J+{total_days}** aujourd'hui."
                     )
                     cursor.execute("UPDATE fiches SET compteur_termine_notifie = 1 WHERE id = ?", (fiche_id,))
                     conn.commit()
@@ -435,12 +437,12 @@ def render_fiche(row, key_prefix="list"):
                     add_change("Ajout du site",       old_site,   new_site,   "🌐")
                     
                     message = (
-                        f"📈 **Avancement mis à jour** — Fiche #{fiche_id} — **{nom_client_msg}** ({ville_msg})\n"
+                        f"📈 **Avancement mis à jour** — **{nom_client_msg}** ({ville_msg})\n"
                         + ("\n".join(changes) if changes else "Aucun changement de cases.")
                         + f"\n\n📊 **Progression : {progress_percent}%**"
                         + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
                     )
-                    ok_prog, details_prog = notifier(message, subject=f"Avancement mis à jour — Fiche #{fiche_id}")
+                    ok_prog, details_prog = notifier(message, subject=f"Avancement mis à jour — {nom_client_msg}")
 
 
                     if not ok_prog:
@@ -453,9 +455,10 @@ def render_fiche(row, key_prefix="list"):
                         except Exception:
                             fresh = row
                         ok100, details100 = envoyer_notification_discord(
-                            content=f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours.",
+                            content=f"✅ {nom_client_msg} — fiche terminée — prête à recevoir des avis dans 10 jours.",
                             embed=embed_fiche_terminee(fresh)
                         )
+
                         if not ok100:
                             st.warning(f"Discord (100%) a échoué : {details100}")
 
@@ -476,9 +479,10 @@ def render_fiche(row, key_prefix="list"):
                     
                         # Envoyer TEXTE + EMBED en un SEUL POST
                         ok, details = envoyer_notification_discord(
-                            content=f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours.",
+                            content=f"✅ {nom_client_msg} — fiche terminée — prête à recevoir des avis dans 10 jours.",
                             embed=emb
                         )
+
                         if not ok:
                             st.warning(f"⚠️ Envoi Discord refusé : {details}")
 
