@@ -127,6 +127,53 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
     return False, f"Exception lors de l'envoi Discord: {last_err}"
 
 
+# --- Config email centralisée (Gmail) ---
+SMTP_HOST = st.secrets.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(st.secrets.get("SMTP_PORT", 465))
+SMTP_LOGIN = st.secrets.get("SMTP_LOGIN", "lucaswebsite28@gmail.com")
+SMTP_PASSWORD = st.secrets.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD")  # mot de passe d’application SANS espaces
+ALERT_TO = st.secrets.get("ALERT_TO", "lmandalorien@gmail.com")
+
+def envoyer_email_smtp(host, port, login, mot_de_passe, destinataire, sujet, message):
+    msg = MIMEText(message)
+    msg["Subject"] = sujet
+    msg["From"] = login
+    msg["To"] = destinataire
+    with smtplib.SMTP_SSL(host, port) as server:
+        server.login(login, mot_de_passe)
+        server.send_message(msg)
+
+def _format_embed_as_text(embed: dict) -> str:
+    if not embed: return ""
+    parts = []
+    if embed.get("title"): parts.append(f"**{embed['title']}**")
+    if embed.get("description"): parts.append(embed["description"])
+    for f in embed.get("fields", []):
+        parts.append(f"{f.get('name','')}: {f.get('value','')}")
+    return "\n".join(parts)
+
+def notifier(content: str = None, *, embed: dict = None, subject: str = None, email_to: str = None):
+    # 1) Discord
+    ok_d, details_d = envoyer_notification_discord(content=content, embed=embed)
+
+    # 2) Email
+    body_parts = []
+    if content: body_parts.append(content)
+    if embed:   body_parts.append(_format_embed_as_text(embed))
+    body = "\n\n".join([p for p in body_parts if p]) or "(Sans contenu)"
+    to = (email_to or ALERT_TO).strip()
+    subj = subject or ("Fiches GMB — " + (embed.get("title") if embed and embed.get("title") else "Notification"))
+
+    ok_e, details_e = True, "OK"
+    try:
+        envoyer_email_smtp(
+            host=SMTP_HOST, port=SMTP_PORT, login=SMTP_LOGIN, mot_de_passe=SMTP_PASSWORD,
+            destinataire=to, sujet=subj, message=body
+        )
+    except Exception as e:
+        ok_e, details_e = False, f"Email ERROR: {e}"
+
+    return (ok_d and ok_e), f"Discord: {details_d} | Email: {details_e}"
 
 
 def date_en_fr(dt: datetime) -> str:
@@ -391,10 +438,14 @@ def render_fiche(row, key_prefix="list"):
                         + f"\n\n📊 **Progression : {progress_percent}%**"
                         + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
                     )
-                    ok_prog, details_prog = notifier(
-                        message,
-                        subject=f"Avancement mis à jour — Fiche #{fiche_id}"
+                    ok_prog, details_prog = message = (
+                        f"📈 **Avancement mis à jour** — Fiche #{fiche_id} — **{nom_client_msg}** ({ville_msg})\n"
+                        + ("\n".join(changes) if changes else "Aucun changement de cases.")
+                        + f"\n\n📊 **Progression : {progress_percent}%**"
+                        + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
                     )
+                    notifier(message, subject=f"Avancement mis à jour — Fiche #{fiche_id}")
+
 
                     if not ok_prog:
                         st.warning(f"Discord (progression) a échoué : {details_prog}")
