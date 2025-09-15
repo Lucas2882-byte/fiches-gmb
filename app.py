@@ -74,22 +74,19 @@ PALETTE_COULEURS = [
 ]
 
 
-# === Discord Webhook (single) ===
-DISCORD_WEBHOOK_FALLBACK = "https://discord.com/api/webhooks/1417237278597578864/eh6l8xf_pasAiIcMxjgOeBVD9mRGp5YfvJeyA6Sdwpjh_8XLOwAEj8nnUDnQpOv27MHZ"
 
-def _get_discord_webhook() -> Optional[str]:
-    url = os.environ.get("DISCORD_WEBHOOK", "").strip()
-    if url:
-        return url
-    return DISCORD_WEBHOOK_FALLBACK
+
+
+# === Discord (une seule fonction, robuste) ===
+DISCORD_WEBHOOK_FALLBACK = "https://discord.com/api/webhooks/TON_NOUVEAU_WEBHOOK_ICI"
 
 def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_retries=3):
     """
-    Renvoie (ok: bool, details: str). Loggue le code HTTP et la réponse.
+    Renvoie (ok: bool, details: str). Envoie content et/ou embed.
+    Gère 200/204, 429 (rate-limit) et 5xx avec retry.
+    Utilise la variable d'env DISCORD_WEBHOOK si présente, sinon le fallback ci-dessus.
     """
-    url = os.environ.get("DISCORD_WEBHOOK", "").strip() or \
-          "https://discord.com/api/webhooks/1417237278597578864/eh6l8xf_pasAiIcMxjgOeBVD9mRGp5YfvJeyA6Sdwpjh_8XLOwAEj8nnUDnQpOv27MHZ"
-
+    url = os.environ.get("DISCORD_WEBHOOK", "").strip() or DISCORD_WEBHOOK_FALLBACK
     if not url:
         return False, "Aucun webhook Discord configuré."
 
@@ -98,6 +95,7 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
         payload["embeds"] = [embed]
 
     headers = {"Content-Type": "application/json"}
+    last_err = "inconnu"
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -117,9 +115,15 @@ def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_re
                 continue
             return False, f"Discord {resp.status_code}: {resp.text[:300]}"
         except Exception as e:
-            time.sleep(min(2 ** attempt, 8))
             last_err = str(e)
+            time.sleep(min(2 ** attempt, 8))
     return False, f"Exception lors de l'envoi Discord: {last_err}"
+
+def _get_discord_webhook() -> Optional[str]:
+    url = os.environ.get("DISCORD_WEBHOOK", "").strip()
+    if url:
+        return url
+    return DISCORD_WEBHOOK_FALLBACK
 
 
 
