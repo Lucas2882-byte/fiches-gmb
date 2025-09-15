@@ -431,54 +431,57 @@ def render_fiche(row, key_prefix="list"):
                     
                 
                     # --- Notifs Discord champ par champ + feedback ---
-                    nom_client_msg = nom_client if nom_client and nom_client != "—" else f"id_{fiche_id}"
+                    nom_client_msg = (row[18] if len(row) > 18 and row[18] else f"id_{fiche_id}") or f"id_{fiche_id}"
                     ville_msg = row[1] or "—"
                     
-                    def _send(msg):
+                    ancien_tel  = row[4]
+                    ancien_site = (row[17] if len(row) > 17 else "")
+                    
+                    def _send(msg: str):
                         ok, details = envoyer_notification_discord(msg)
                         if not ok:
                             st.warning(f"Discord: {details}")
+                        return ok
                     
-                    # 1/ message récap global si au moins un champ a changé
                     changes = []
-                    if nouveau_nom != ancien_nom:
+                    if (nouveau_nom or "").strip() != (ancien_nom or "").strip():
                         changes.append(f"📄 **Nom** : {ancien_nom or '—'} → {nouveau_nom or '—'}")
-                    if nouvelle_adresse != ancienne_adresse:
+                    if (nouvelle_adresse or "").strip() != (ancienne_adresse or "").strip():
                         changes.append(f"📍 **Adresse** : {ancienne_adresse or '—'} → {nouvelle_adresse or '—'}")
-                    if nouveau_tel != ancien_tel:
+                    if (nouveau_tel or "").strip() != (ancien_tel or "").strip():
                         changes.append(f"📞 **Téléphone** : {ancien_tel or '—'} → {nouveau_tel or '—'}")
-                    if nouveau_site != ancien_site:
+                    if (nouveau_site or "").strip() != (ancien_site or "").strip():
                         changes.append(f"🌐 **Site web** : {ancien_site or '—'} → {nouveau_site or '—'}")
                     
                     if changes:
+                        # Récap global
                         _send(
                             "✏️ **Modification de fiche** "
                             f"#{fiche_id} — **{nom_client_msg}** ({ville_msg})\n" + "\n".join(changes)
                         )
-                    
-                        # 2/ messages spécifiques par type de champ (si tu veux “une notif par type”)
-                        if nouvelle_adresse != ancienne_adresse:
+                        # Messages ciblés (optionnels)
+                        if (nouvelle_adresse or "").strip() != (ancienne_adresse or "").strip():
                             _send(
                                 f"🏷️ Adresse modifiée pour **{nom_client_msg}** ({ville_msg})\n"
                                 f"**Avant** : {ancienne_adresse or '—'}\n**Après** : {nouvelle_adresse or '—'}"
                             )
-                        if nouveau_site != ancien_site:
+                        if (nouveau_site or "").strip() != (ancien_site or "").strip():
                             _send(
                                 f"🕸️ Site modifié pour **{nom_client_msg}** ({ville_msg})\n"
                                 f"**Avant** : {ancien_site or '—'}\n**Après** : {nouveau_site or '—'}"
                             )
-                        if nouveau_tel != ancien_tel:
+                        if (nouveau_tel or "").strip() != (ancien_tel or "").strip():
                             _send(
                                 f"☎️ Téléphone modifié pour **{nom_client_msg}** ({ville_msg})\n"
                                 f"**Avant** : {ancien_tel or '—'}\n**Après** : {nouveau_tel or '—'}"
                             )
-                        if nouveau_nom != ancien_nom:
+                        if (nouveau_nom or "").strip() != (ancien_nom or "").strip():
                             _send(
                                 f"📝 Nom modifié pour fiche **#{fiche_id}** ({ville_msg})\n"
                                 f"**Avant** : {ancien_nom or '—'}\n**Après** : {nouveau_nom or '—'}"
                             )
-                    
                         st.toast("🔔 Notifications Discord envoyées", icon="✅")
+
 
 
                 
