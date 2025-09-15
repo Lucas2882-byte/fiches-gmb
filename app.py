@@ -288,16 +288,27 @@ def render_fiche(row, key_prefix="list"):
                     upload_db_to_github()
                 
                     # 🔔 Discord si on vient d'atteindre 100%
+                    # ... après conn.commit() et upload_db_to_github()
+
+                    # 🔔 Discord si on vient d'atteindre 100%
                     if progress_percent == 100 and ancien_statut != "terminé":
-                        # 1) petit texte
-                        envoyer_notification_discord(
-                            f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours."
+                        # Recharger la fiche depuis la BDD pour l'embed (valeurs fraîches)
+                        try:
+                            fresh = cursor.execute("SELECT * FROM fiches WHERE id = ?", (fiche_id,)).fetchone()
+                        except Exception:
+                            fresh = row  # fallback si jamais
+                    
+                        # Construire l'embed à partir de la fiche fraîche
+                        emb = embed_fiche_terminee(fresh)
+                    
+                        # Envoyer TEXTE + EMBED en un SEUL POST
+                        ok, details = envoyer_notification_discord(
+                            content=f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours.",
+                            embed=emb
                         )
-                        # 2) embed détaillé
-                        envoyer_notification_discord(
-                            content=None,
-                            embed=embed_fiche_terminee(row)
-                        )
+                        if not ok:
+                            st.warning(f"⚠️ Envoi Discord refusé : {details}")
+
                 
                     st.success("✅ Progression enregistrée")
                     st.rerun()
