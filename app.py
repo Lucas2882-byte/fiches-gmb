@@ -71,6 +71,210 @@ PALETTE_COULEURS = [
     "#abb2b9"   # Gris pastel
 ]
 
+
+def render_fiche(row, key_prefix="list"):
+    """
+    Rend la fiche complète (gauche: infos, droite: actions).
+    key_prefix permet d'éviter les collisions Streamlit entre 'list' et 'search'.
+    """
+    fiche_id = row[0]
+
+    # --- Dates (création + fin J+30) ---
+    try:
+        date_creation = datetime.strptime(row[6], "%Y-%m-%d")
+        date_creation_str = date_creation.strftime("%d/%m/%Y")
+        date_fin_str = (date_creation + timedelta(days=30)).strftime("%d/%m/%Y")
+    except Exception:
+        date_creation_str = "—"
+        date_fin_str = "—"
+
+    # --- Couleur badge client ---
+    nom_client = row[18] if len(row) > 18 and row[18] else "—"
+    couleur_client = couleur_depuis_nom(nom_client) if nom_client != "—" else "#555"
+
+    # --- Récup flags progression (indices tels que dans ton code actuel) ---
+    # NOTE: si tu passes à sqlite3.Row, utilise row["creation_fiche"] etc.
+    creation_fiche_val = int(row[13]) == 1 if len(row) > 13 and row[13] is not None else False
+    ajout_numero_val = int(row[14]) == 1 if len(row) > 14 and row[14] is not None else False
+    ajout_photos_val = int(row[15]) == 1 if len(row) > 15 and row[15] is not None else False
+    ajout_site_val   = int(row[16]) == 1 if len(row) > 16 and row[16] is not None else False
+    lien_en_bdd      = row[19] if len(row) > 19 else ""  # lien_fiche_terminee si présent
+
+    # --- UI cadre principal ---
+    with st.container():
+        st.markdown('<div class="fiche-complete-glass" style="padding: 0; margin: 0;">', unsafe_allow_html=True)
+
+        col_left, col_sep, col_right = st.columns([1, 0.05, 1])
+
+        with col_left:
+            st.markdown(f"""
+            <div class='badge-glass' style="margin-bottom:10px;background: linear-gradient(135deg, {couleur_client}ee, {couleur_client}); border-color:{couleur_client}40;">
+                🔢 {nom_client}
+            </div>
+            <p>📄 <b>Nom :</b> {row[2]}</p>
+            <p>🏙️ <b>Ville :</b> {row[1]}</p>
+            <p>📍 <b>Adresse :</b> {row[3]}</p>
+            <p>📞 <b>Téléphone :</b> {row[4]}</p>
+            <p>🌐 <b>Site :</b> {row[17] if len(row)>17 and row[17] else "—"}</p>
+            <p>📅 <b>Date d'ajout :</b> {date_creation_str}</p>
+            <p style='color:#ff6b6b; font-weight: 600;'>🛑 <b>Date de fin :</b> {date_fin_str}</p>
+            """, unsafe_allow_html=True)
+
+        with col_sep:
+            st.markdown("<div class='separator' style='height:400px; margin: 0 auto;'></div>", unsafe_allow_html=True)
+
+        with col_right:
+            action = st.selectbox(
+                "🔧 Action sur la fiche",
+                ["Mettre à jour la progression", "Modifier les informations de la fiche"],
+                key=f"{key_prefix}_action_{fiche_id}"
+            )
+
+            # === 1) PROGRESSION ===
+            if action == "Mettre à jour la progression":
+                col_cb1, col_cb2 = st.columns(2)
+
+                with col_cb1:
+                    creation_fiche = st.checkbox(
+                        "🆕 Création de la fiche",
+                        value=st.session_state.get(f"{key_prefix}_crea_{fiche_id}", creation_fiche_val),
+                        key=f"{key_prefix}_crea_{fiche_id}"
+                    )
+                    ajout_numero = st.checkbox(
+                        "📞 Ajout numéro",
+                        value=st.session_state.get(f"{key_prefix}_num_{fiche_id}", ajout_numero_val),
+                        key=f"{key_prefix}_num_{fiche_id}"
+                    )
+
+                with col_cb2:
+                    ajout_photos = st.checkbox(
+                        "🖼️ Ajout photos",
+                        value=st.session_state.get(f"{key_prefix}_photos_{fiche_id}", ajout_photos_val),
+                        key=f"{key_prefix}_photos_{fiche_id}"
+                    )
+                    ajout_site = st.checkbox(
+                        "🌐 Ajout site",
+                        value=st.session_state.get(f"{key_prefix}_site_{fiche_id}", ajout_site_val),
+                        key=f"{key_prefix}_site_{fiche_id}"
+                    )
+
+                # Lien fiche terminée
+                lien_fiche = st.text_input(
+                    "🔗 Lien de la fiche (pour atteindre 100%)",
+                    value=st.session_state.get(f"{key_prefix}_lien_{fiche_id}", lien_en_bdd or ""),
+                    key=f"{key_prefix}_lien_{fiche_id}"
+                )
+
+                # Calcul progression
+                steps = [creation_fiche, ajout_numero, ajout_photos, ajout_site]
+                progress_percent = sum(steps) * 20
+                if lien_fiche.strip():
+                    progress_percent = 100
+
+                st.progress(progress_percent / 100.0, text=f"Progression : {progress_percent}%")
+
+                # Sauvegarde unique
+                if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
+                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 20 else "à faire")
+
+                    # Mise à jour BDD
+                    cursor.execute("""
+                        UPDATE fiches
+                        SET creation_fiche = ?, 
+                            ajout_numero = ?, 
+                            ajout_photos = ?, 
+                            ajout_site = ?, 
+                            statut = ?, 
+                            lien_fiche_terminee = ?
+                        WHERE id = ?
+                    """, (
+                        1 if creation_fiche else 0,
+                        1 if ajout_numero else 0,
+                        1 if ajout_photos else 0,
+                        1 if ajout_site else 0,
+                        nouveau_statut,
+                        lien_fiche.strip(),
+                        fiche_id
+                    ))
+                    conn.commit()
+                    upload_db_to_github()
+
+                    # Notifications si terminé
+                    if nouveau_statut == "terminé":
+                        try:
+                            ville = row[1]
+                            adresse = row[3]
+                            lien_final = lien_fiche.strip() or "—"
+                            envoyer_notification_discord(
+                                f"✅ **Fiche Client terminée : {nom_client}**\n\n"
+                                f"📄 Nom : {row[2]}\n"
+                                f"🏙️ Ville : {ville}\n"
+                                f"📍 Adresse : {adresse}\n"
+                                f"🔗 Lien : {lien_final}"
+                            )
+                            envoyer_email_smtp(
+                                host="smtp.hostinger.com",
+                                port=465,
+                                login="contact@lucas-freelance.fr",
+                                mot_de_passe=os.environ.get("SMTP_PASSWORD"),
+                                destinataire="lucaswebsite28@gmail.com",
+                                sujet=f"✅ Fiche terminée : {nom_client}",
+                                message=f"Nom : {row[2]}\nVille : {ville}\nAdresse : {adresse}\nLien : {lien_final}"
+                            )
+                        except Exception as e:
+                            st.warning(f"⚠️ Notification échouée : {e}")
+
+                    st.success("✅ Progression enregistrée")
+                    st.rerun()
+
+            # === 2) MODIFIER LES INFOS ===
+            else:
+                col1, col2 = st.columns(2)
+                with col1:
+                    nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"{key_prefix}_edit_nom_{fiche_id}")
+                    nouveau_tel = st.text_input("📞 Téléphone", value=row[4], key=f"{key_prefix}_edit_tel_{fiche_id}")
+                with col2:
+                    nouvelle_adresse = st.text_input("🏙️ Adresse", value=row[3], key=f"{key_prefix}_edit_adresse_{fiche_id}")
+                    nouveau_site = st.text_input("🌐 Site web", value=(row[17] if len(row)>17 and row[17] else ""), key=f"{key_prefix}_edit_site_{fiche_id}")
+
+                if st.button("✅ Enregistrer les modifications", key=f"{key_prefix}_btn_save_infos_{fiche_id}"):
+                    ancien_nom = row[2]
+                    ancienne_adresse = row[3]
+
+                    cursor.execute("""
+                        UPDATE fiches
+                        SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
+                        WHERE id = ?
+                    """, (nouveau_nom, row[1], nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
+                    conn.commit()
+                    upload_db_to_github()
+                    st.success("📝 Informations mises à jour avec succès")
+
+                    # Email de notification si changements significatifs
+                    try:
+                        if (nouveau_nom != ancien_nom) or (nouvelle_adresse != ancienne_adresse) or (nouveau_site != (row[17] if len(row)>17 and row[17] else "")) or (nouveau_tel != row[4]):
+                            envoyer_email_smtp(
+                                host="smtp.hostinger.com",
+                                port=465,
+                                login="contact@lucas-freelance.fr",
+                                mot_de_passe=os.environ.get("SMTP_PASSWORD"),
+                                destinataire="lucaswebsite28@gmail.com",
+                                sujet=f"🔔 Modification fiche client : {nom_client}",
+                                message=(
+                                    f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
+                                    f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
+                                    f"📞 Téléphone : {row[4]} → {nouveau_tel}\n"
+                                    f"🌐 Site web : {(row[17] if len(row)>17 and row[17] else '—')} → {nouveau_site}"
+                                )
+                            )
+                    except Exception as e:
+                        st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
+
+                    st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
 def envoyer_notification_discord(message):
     webhook_url = os.environ.get("DISCORD_WEBHOOK")
     if not webhook_url:
@@ -306,23 +510,24 @@ with search_col2:
         label_visibility="collapsed"
     )
 
-# Récupération et filtrage des données
+# --- Récupération et filtrage des données (UNIFIÉ) ---
 rows = cursor.execute("SELECT * FROM fiches ORDER BY id DESC").fetchall()
 
-# Filtrage par recherche
+# Filtrage par recherche (ville, nom, numero_client)
 filtered_rows = []
 if search_query:
     search_lower = search_query.lower()
     for row in rows:
-        ville = (row[2] or "").lower()  # ville is row[2]
-        nom = (row[1] or "").lower()    # nom is row[1]
-        numero_client = (row[18] or "").lower()  # numero_client is row[18]
-        if (search_lower in ville or search_lower in nom or search_lower in numero_client):
+        # ⚠️ Garde ces index comme dans TON schéma actuel (tel que tu les utilises déjà plus haut)
+        ville = (row[2] or "").lower()           # ville
+        nom = (row[1] or "").lower()             # nom
+        numero_client_val = (row[18] or "").lower() if len(row) > 18 and row[18] else ""
+        if (search_lower in ville) or (search_lower in nom) or (search_lower in numero_client_val):
             filtered_rows.append(row)
 else:
     filtered_rows = rows
 
-# Statistiques modernes
+# Petite bannière si on est en mode recherche
 total_fiches = len(filtered_rows)
 if search_query:
     st.markdown(f"""
@@ -330,126 +535,27 @@ if search_query:
         <h4 style='margin: 0;'>📊 {total_fiches} fiche(s) trouvée(s) pour "{search_query}"</h4>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Organisation par statut pour les recherches
-    stats = {"à faire": [], "en cours": [], "terminé": []}
-    for row in filtered_rows:
-        if row[7] in stats:  # statut is row[7] in the real schema
-            stats[row[7]].append(row)
-        else:
-            stats["à faire"].append(row)  # fallback
-            
-    # Couleurs modernes pour les bannières de recherche
-    couleurs_bg = {
-        "à faire": "linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)",
-        "en cours": "linear-gradient(135deg, #4ECDC4 0%, #6ED4CC 100%)", 
-        "terminé": "linear-gradient(135deg, #45B7D1 0%, #67C3DD 100%)"
-    }
-    
-    # Affichage par statut pour les recherches
-    for statut in ["à faire", "en cours", "terminé"]:
-        if len(stats[statut]) > 0:  # Afficher seulement s'il y a des fiches
-            # Header moderne pour chaque section
-            status_icon = {"à faire": "⏳", "en cours": "⚡", "terminé": "✅"}[statut]
-            
-            st.markdown(f"""
-            <div style='margin: 2rem 0 1rem 0; padding: 1rem; 
-                        background: {couleurs_bg[statut]}; 
-                        border-radius: 15px; color: white; text-align: center;'>
-                <h3 style='margin: 0; font-weight: 600;'>
-                    {status_icon} {statut.upper()} 
-                    <span style='background: rgba(255,255,255,0.2); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; margin-left: 1rem;'>
-                        {len(stats[statut])}
-                    </span>
-                </h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Container moderne pour les fiches
-            with st.container():
-                for idx, row in enumerate(stats[statut]):
-                    fiche_id = row[0]
-                    
-                    # Dictionnaire de mois en français
-                    mois_fr = {
-                        "01": "janvier", "02": "février", "03": "mars", "04": "avril",
-                        "05": "mai", "06": "juin", "07": "juillet", "08": "août",
-                        "09": "septembre", "10": "octobre", "11": "novembre", "12": "décembre"
-                    }
-                    
-                    # Convertir date ajout + calcul date de fin
-                    date_creation = datetime.strptime(row[6], "%Y-%m-%d")
-                    date_fin = date_creation + timedelta(days=30)
-                    
-                    # Formater en "21 mai 2025"
-                    def date_en_fr(dt):
-                        return f"{dt.day} {mois_fr[dt.strftime('%m')]} {dt.year}"
-                    
-                    date_creation_str = date_en_fr(date_creation)
-                    date_fin_str = date_en_fr(date_fin)
-                    
-                    # Badge nom client ultra moderne avec espacement
-                    nom_client = row[18] if row[18] else "—"
-                    couleur_client = couleur_depuis_nom(nom_client) if nom_client != "—" else "#555"
-                    
-                    st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, {couleur_client}ee, {couleur_client}); 
-                                color: white; padding: 10px 18px; border-radius: 12px; 
-                                font-weight: 700; display: inline-block; margin-bottom: 20px;
-                                box-shadow: 0 8px 32px {couleur_client}35, 0 4px 12px {couleur_client}25;
-                                border: 1px solid {couleur_client}40; backdrop-filter: blur(8px);'>
-                        🔢 {nom_client}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Grande box glassmorphism unique avec conteneur natif
-                    with st.container():
-                        st.markdown('<div class="fiche-complete-glass" style="padding: 0; margin: 0;">', unsafe_allow_html=True)
-                        
-                        # Colonnes Streamlit pour disposition côte à côte
-                        col_left, col_sep, col_right = st.columns([1, 0.05, 1])
-                        
-                        with col_left:
-                            st.markdown(f"""
-                            <p>📄 <b>Nom :</b> {row[2]}</p>
-                            <p>🏙️ <b>Ville :</b> {row[1]}</p>
-                            <p>📍 <b>Adresse :</b> {row[3]}</p>
-                            <p>📞 <b>Téléphone :</b> {row[4]}</p>
-                            <p>🌐 <b>Site :</b> {row[17] if row[17] else "—"}</p>
-                            <p>📅 <b>Date d'ajout :</b> {date_creation_str}</p>
-                            <p style='color:#ff6b6b; font-weight: 600;'>🛑 <b>Date de fin :</b> {date_fin_str}</p>
-                            """, unsafe_allow_html=True)
-                        
-                        with col_sep:
-                            st.markdown("<div class='separator' style='height:400px; margin: 0 auto;'></div>", unsafe_allow_html=True)
-                        
-                        with col_right:
-                            action = st.selectbox(
-                                "🔧 Action sur la fiche",
-                                ["Mettre à jour la progression", "Modifier les informations de la fiche"],
-                                key=f"action_search_{fiche_id}"
-                            )
-                            
-                            if action == "Mettre à jour la progression":
-                                # Section checkboxes en 2 colonnes
-                                col_cb1, col_cb2 = st.columns(2)
-                                with col_cb1:
-                                    fiche_creee = st.checkbox("🆕 Création de la fiche", value=int(row[13]) == 1, key=f"fiche_creee_search_{fiche_id}")
-                                    # Ajoutez les autres checkboxes selon le besoin
-                                
-                                st.button("💾 Sauvegarder", key=f"save_search_{fiche_id}")
-                                
-                            elif action == "Modifier les informations de la fiche":
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    nouveau_nom = st.text_input("📄 Nom", value=row[2], key=f"edit_nom_search_{fiche_id}")
-                                with col2:
-                                    nouvelle_ville = st.text_input("🏙️ Ville", value=row[1], key=f"edit_ville_search_{fiche_id}")
-                                
-                                st.button("✅ Enregistrer les modifications", key=f"btn_save_infos_search_{fiche_id}")
-                        
-                        # Fermeture de la grande box glassmorphism
-                        st.markdown('</div>', unsafe_allow_html=True)
+
+# --- Ordonnancement (identique entre recherche et non-recherche) ---
+def get_date_fin(row):
+    try:
+        date_creation = datetime.strptime(row[6], "%Y-%m-%d")
+        return date_creation + timedelta(days=30)
+    except Exception:
+        # grossièrement loin dans le futur en cas d'erreur de date
+        return datetime.now() + timedelta(days=9999)
+
+# Si on recherche, on garde l’ordre par date de fin croissante aussi (même logique)
+rows_to_show = sorted(filtered_rows, key=get_date_fin)
+
+# --- Affichage UNIFIÉ : on réutilise TOUJOURS la même fonction ---
+st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+
+for row in rows_to_show:
+    # IMPORTANT : pour éviter les collisions Streamlit, on varie la clé selon qu'on est en mode recherche ou non
+    key_prefix = "search" if search_query else "list"
+    render_fiche(row, key_prefix=key_prefix)
+
 
 else:
     # Pas de recherche : tri par date de fin (la plus proche d'aujourd'hui en premier)
