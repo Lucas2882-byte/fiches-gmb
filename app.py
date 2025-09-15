@@ -354,22 +354,6 @@ def render_fiche(row, key_prefix="list"):
         st.markdown('</div>', unsafe_allow_html=True)
 
 
-def envoyer_notification_discord(message):
-    webhook_url = os.environ.get("DISCORD_WEBHOOK")
-    if not webhook_url:
-        print("⚠️ DISCORD_WEBHOOK non configuré, notification ignorée.")
-        return
-    payload = {"content": message}
-    try:
-        response = requests.post(webhook_url, json=payload)
-        if response.status_code == 204:
-            print("✅ Message envoyé à Discord.")
-        else:
-            print(f"❌ Erreur Discord : {response.status_code}")
-    except Exception as e:
-        print(f"💥 Exception lors de l'envoi à Discord : {e}")
-
-
 
 def couleur_depuis_nom(nom_client):
     if nom_client == "—":
