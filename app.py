@@ -475,7 +475,28 @@ def date_en_fr(dt: datetime) -> str:
         7:"juillet",8:"août",9:"septembre",10:"octobre",11:"novembre",12:"décembre"
     }
     return f"{dt.day} {mois_fr[dt.month]} {dt.year}"
-    
+
+# === MIGRATION: colonnes pour le compteur J+30 ===
+def _ensure_column(table, name, type_sql, default_sql=None):
+    cols = [r[1] for r in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
+    if name not in cols:
+        sql = f"ALTER TABLE {table} ADD COLUMN {name} {type_sql}"
+        if default_sql is not None:
+            sql += f" DEFAULT {default_sql}"
+        cursor.execute(sql)
+        conn.commit()
+
+_ensure_column("fiches", "compteur_started_at", "TEXT")           # 'YYYY-MM-DD' quand on démarre
+_ensure_column("fiches", "compteur_jours_total", "INTEGER", 30)   # durée (par défaut 30)
+
+# Map nom_colonne -> index (pour SELECT *), à réutiliser dans render_fiche
+def _cols_map():
+    info = cursor.execute("PRAGMA table_info(fiches)").fetchall()
+    names = [r[1] for r in info]
+    return {name: i for i, name in enumerate(names)}
+
+COLS = _cols_map()
+
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
     with open(DB_FILE, "rb") as f:
