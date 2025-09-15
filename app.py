@@ -349,6 +349,56 @@ def render_fiche(row, key_prefix="list"):
                     ))
                     conn.commit()
                     upload_db_to_github()
+
+                    # 🔔 Discord : résumé des changements d'avancement (cases cochées) + % + statut
+                    nom_client_msg = (nom_client if nom_client and nom_client != "—" else f"id_{fiche_id}")
+                    ville_msg = (row[1] or "—")
+                    
+                    # états AVANT (ceux lus dans la ligne au chargement)
+                    old_crea   = creation_fiche_val
+                    old_num    = ajout_numero_val
+                    old_photos = ajout_photos_val
+                    old_site   = ajout_site_val
+                    
+                    # états APRÈS (ceux des checkboxes courantes)
+                    new_crea   = bool(creation_fiche)
+                    new_num    = bool(ajout_numero)
+                    new_photos = bool(ajout_photos)
+                    new_site   = bool(ajout_site)
+                    
+                    changes = []
+                    def add_change(label, old, new, icon):
+                        if old != new:
+                            changes.append(f"{icon} **{label}** : {'✅' if old else '❌'} → {'✅' if new else '❌'}")
+                    
+                    add_change("Création de la fiche", old_crea,   new_crea,   "🆕")
+                    add_change("Ajout du numéro",     old_num,    new_num,    "📞")
+                    add_change("Ajout des photos",    old_photos, new_photos, "🖼️")
+                    add_change("Ajout du site",       old_site,   new_site,   "🌐")
+                    
+                    message = (
+                        f"📈 **Avancement mis à jour** — Fiche #{fiche_id} — **{nom_client_msg}** ({ville_msg})\n"
+                        + ("\n".join(changes) if changes else "Aucun changement de cases.")
+                        + f"\n\n📊 **Progression : {progress_percent}%**"
+                        + f"\n🏷️ **Statut : {ancien_statut or '—'} → {nouveau_statut}**"
+                    )
+                    ok_prog, details_prog = envoyer_notification_discord(message)
+                    if not ok_prog:
+                        st.warning(f"Discord (progression) a échoué : {details_prog}")
+                    
+                    # (tu gardes ensuite ton bloc existant pour 100% qui envoie l'embed)
+                    if progress_percent == 100 and ancien_statut != "terminé":
+                        try:
+                            fresh = cursor.execute("SELECT * FROM fiches WHERE id = ?", (fiche_id,)).fetchone()
+                        except Exception:
+                            fresh = row
+                        ok100, details100 = envoyer_notification_discord(
+                            content=f"✅ Fiche #{fiche_id} terminée — prête à recevoir des avis dans 10 jours.",
+                            embed=embed_fiche_terminee(fresh)
+                        )
+                        if not ok100:
+                            st.warning(f"Discord (100%) a échoué : {details100}")
+
                 
                     # 🔔 Discord si on vient d'atteindre 100%
                     # ... après conn.commit() et upload_db_to_github()
