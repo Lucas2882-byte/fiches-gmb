@@ -15,6 +15,14 @@ import hashlib
 import json
 from typing import Optional, Dict, List
 # --- SMTP config centralisée (Gmail) ---
+# --- Config email centralisée (Gmail) ---
+SMTP_HOST = st.secrets.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(st.secrets.get("SMTP_PORT", 465))
+SMTP_LOGIN = st.secrets.get("SMTP_LOGIN", "lucaswebsite28@gmail.com")
+# ⚠️ retire les espaces au cas où ils ont été collés
+SMTP_PASSWORD = (st.secrets.get("SMTP_PASSWORD") or os.environ.get("SMTP_PASSWORD") or "").replace(" ", "")
+ALERT_TO = st.secrets.get("ALERT_TO", "lmandalorien@gmail.com")
+
 
 
 st.set_page_config(page_title="Fiches GMB", layout="wide")
