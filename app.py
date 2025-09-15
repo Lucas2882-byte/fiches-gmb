@@ -474,13 +474,13 @@ def upload_db_to_github():
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
 with st.expander("⚙️ Debug Discord"):
-env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
-used = (env_url or DISCORD_WEBHOOK_FALLBACK or "").strip()
-st.write("Source utilisée:", "ENV" if env_url else "FALLBACK")
-st.code(repr(used))  # montre les caractères invisibles
-if st.button("🧪 Tester Discord (URL ci-dessus)"):
-    ok, details = envoyer_notification_discord("Ping test ✅")
-    st.write("Résultat:", ok, details)
+    env_url = os.environ.get("DISCORD_WEBHOOK", "").strip()
+    used = (env_url or DISCORD_WEBHOOK_FALLBACK or "").strip()
+    st.write("Source utilisée:", "ENV" if env_url else "FALLBACK")
+    st.code(repr(used))  # montre les caractères invisibles
+    if st.button("🧪 Tester Discord (URL ci-dessus)"):
+        ok, details = envoyer_notification_discord("Ping test ✅")
+        st.write("Résultat:", ok, details)
 
 numero_client = st.text_input("🔢 N° Commande nouvelles fiches")  # ← AJOUT ICI
 nb_fiches = st.number_input("Nombre de fiches à ajouter", min_value=1, max_value=10, value=1)
