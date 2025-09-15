@@ -167,57 +167,72 @@ def render_fiche(row, key_prefix="list"):
 
                 # Sauvegarde unique
                 if st.button("💾 Sauvegarder", key=f"{key_prefix}_save_{fiche_id}"):
-                    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
+    # Déterminer le statut
+    nouveau_statut = "terminé" if progress_percent == 100 else ("en cours" if progress_percent >= 25 else "à faire")
 
-                    # Mise à jour BDD
-                    cursor.execute("""
-                        UPDATE fiches
-                        SET creation_fiche = ?, 
-                            ajout_numero = ?, 
-                            ajout_photos = ?, 
-                            ajout_site = ?, 
-                            statut = ?, 
-                            lien_fiche_terminee = ?
-                        WHERE id = ?
-                    """, (
-                        1 if creation_fiche else 0,
-                        1 if ajout_numero else 0,
-                        1 if ajout_photos else 0,
-                        1 if ajout_site else 0,
-                        nouveau_statut,
-                        lien_fiche.strip(),
-                        fiche_id
-                    ))
-                    conn.commit()
-                    upload_db_to_github()
+    # --- Mémoriser l'ancien statut pour éviter les doublons d'envoi
+    ancien_statut = row[7] if len(row) > 7 else None
 
-                    # Notifications si terminé
-                    if nouveau_statut == "terminé":
-                        try:
-                            ville = row[1]
-                            adresse = row[3]
-                            lien_final = lien_fiche.strip() or "—"
-                            envoyer_notification_discord(
-                                f"✅ **Fiche Client terminée : {nom_client}**\n\n"
-                                f"📄 Nom : {row[2]}\n"
-                                f"🏙️ Ville : {ville}\n"
-                                f"📍 Adresse : {adresse}\n"
-                                f"🔗 Lien : {lien_final}"
-                            )
-                            envoyer_email_smtp(
-                                host="smtp.hostinger.com",
-                                port=465,
-                                login="contact@lucas-freelance.fr",
-                                mot_de_passe=os.environ.get("SMTP_PASSWORD"),
-                                destinataire="lucaswebsite28@gmail.com",
-                                sujet=f"✅ Fiche terminée : {nom_client}",
-                                message=f"Nom : {row[2]}\nVille : {ville}\nAdresse : {adresse}\nLien : {lien_final}"
-                            )
-                        except Exception as e:
-                            st.warning(f"⚠️ Notification échouée : {e}")
+    # Mise à jour BDD (sans lien, comme demandé)
+    cursor.execute("""
+        UPDATE fiches
+        SET creation_fiche = ?, 
+            ajout_numero = ?, 
+            ajout_photos = ?, 
+            ajout_site = ?, 
+            statut = ?
+        WHERE id = ?
+    """, (
+        1 if creation_fiche else 0,
+        1 if ajout_numero else 0,
+        1 if ajout_photos else 0,
+        1 if ajout_site else 0,
+        nouveau_statut,
+        fiche_id
+    ))
+    conn.commit()
+    upload_db_to_github()
 
-                    st.success("✅ Progression enregistrée")
-                    st.rerun()
+    # 🔔 Notification Discord si on vient d'atteindre 100%
+    if progress_percent == 100 and ancien_statut != "terminé":
+        try:
+            # Infos de la fiche
+            nom_client = row[18] if len(row) > 18 and row[18] else f"id_{fiche_id}"
+            nom_fiche  = row[2] if len(row) > 2 else "—"
+            ville      = row[1] if len(row) > 1 else "—"
+            adresse    = row[3] if len(row) > 3 else "—"
+            telephone  = row[4] if len(row) > 4 else "—"
+            site_web   = (row[17] if len(row) > 17 and row[17] else "—")
+
+            # Dates
+            try:
+                date_creation = datetime.strptime(row[6], "%Y-%m-%d")
+            except Exception:
+                date_creation = datetime.now()
+
+            date_fin_30 = date_creation + timedelta(days=30)
+            date_avis_10 = datetime.now() + timedelta(days=10)  # prêt à recevoir des avis dans 10j à partir de la finalisation
+
+            msg = (
+                "✅ **Fiche terminée**\n"
+                f"💬 Prête à recevoir des avis dans **10 jours** (le **{date_en_fr(date_avis_10)}**)\n\n"
+                f"**Client :** {nom_client}\n"
+                f"**Nom :** {nom_fiche}\n"
+                f"**Ville :** {ville}\n"
+                f"**Adresse :** {adresse}\n"
+                f"**Téléphone :** {telephone}\n"
+                f"**Site :** {site_web}\n"
+                f"**Créée le :** {date_en_fr(date_creation)}\n"
+                f"**Fin J+30 :** {date_en_fr(date_fin_30)}"
+            )
+
+            envoyer_notification_discord(msg)
+        except Exception as e:
+            st.warning(f"⚠️ Notification Discord échouée : {e}")
+
+    st.success("✅ Progression enregistrée")
+    st.rerun()
+
 
             # === 2) MODIFIER LES INFOS ===
             else:
@@ -362,6 +377,14 @@ def upload_image_to_github(file, filename):
     else:
         return None
 
+# --- Dates FR ---
+def date_en_fr(dt: datetime) -> str:
+    mois_fr = {
+        1:"janvier",2:"février",3:"mars",4:"avril",5:"mai",6:"juin",
+        7:"juillet",8:"août",9:"septembre",10:"octobre",11:"novembre",12:"décembre"
+    }
+    return f"{dt.day} {mois_fr[dt.month]} {dt.year}"
+    
 # --- Upload DB to GitHub ---
 def upload_db_to_github():
     with open(DB_FILE, "rb") as f:
