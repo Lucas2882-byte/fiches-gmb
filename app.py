@@ -793,6 +793,53 @@ def upload_db_to_github():
     if sha:
         payload["sha"] = sha
     requests.put(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{db_path}", headers=headers, json=payload)
+# === Patch: Discord + Email unifiés (drop-in, aucune modif ailleurs) ===
+# On conserve l'implémentation Discord actuelle
+__discord_only = envoyer_notification_discord
+
+def envoyer_notification_discord(content=None, *, embed=None, timeout=10, max_retries=3,
+                                 subject=None, email_to=None, _skip_email=False):
+    """
+    Envoie sur Discord, puis (par défaut) un e-mail.
+    - subject/email_to optionnels pour personnaliser le mail.
+    - _skip_email interne pour éviter des boucles si besoin.
+    Retourne (ok_global, details).
+    """
+    ok_d, details_d = __discord_only(
+        content=content, embed=embed, timeout=timeout, max_retries=max_retries
+    )
+
+    ok_e, details_e = True, "OK"
+    if not _skip_email:
+        try:
+            # Corps d'email = content + embed formaté
+            body_parts = []
+            if content:
+                body_parts.append(content)
+            if embed:
+                body_parts.append(_format_embed_as_text(embed))
+            body = "\n\n".join([p for p in body_parts if p]) or "(Sans contenu)"
+
+            to = (email_to or ALERT_TO).strip()
+            subj = subject or ("Fiches GMB — " + (embed.get("title") if embed and embed.get("title") else "Notification"))
+
+            envoyer_email_smtp(
+                host=SMTP_HOST,
+                port=SMTP_PORT,
+                login=SMTP_LOGIN,
+                mot_de_passe=SMTP_PASSWORD,
+                destinataire=to,
+                sujet=sh2 := subj,  # nom local juste pour lisibilité
+                message=body
+            )
+        except Exception as e:
+            ok_e, details_e = False, f"Email ERROR: {e}"
+
+    return (ok_d and ok_e), f"Discord: {details_d} | Email: {details_e}"
+
+# Rendre notifier() un alias propre pour éviter tout double envoi
+def notifier(content: str = None, *, embed: dict = None, subject: str = None, email_to: str = None):
+    return envoyer_notification_discord(content=content, embed=embed, subject=subject, email_to=email_to)
 
 # --- Interface ---
 st.title("📍 Gestion fiches GMB")
