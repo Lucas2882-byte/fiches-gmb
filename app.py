@@ -349,12 +349,12 @@ def render_fiche(row, key_prefix="list"):
                     nouveau_tel      = st.session_state[tel_key]
                     nouvelle_adresse = st.session_state[adr_key]
                     nouveau_site     = st.session_state[site_key]
-            
+                
                     ancien_nom       = row[2]
                     ancienne_adresse = row[3]
                     ancien_tel       = row[4]
                     ancien_site      = (row[17] if len(row) > 17 else "")
-            
+                
                     cursor.execute("""
                         UPDATE fiches
                         SET nom = ?, ville = ?, adresse = ?, telephone = ?, demande_site_texte = ?
@@ -362,15 +362,9 @@ def render_fiche(row, key_prefix="list"):
                     """, (nouveau_nom, row[1], nouvelle_adresse, nouveau_tel, nouveau_site, fiche_id))
                     conn.commit()
                     upload_db_to_github()
-            
-                    # Réaligne session_state
-                    st.session_state[nom_key]  = nouveau_nom
-                    st.session_state[tel_key]  = nouveau_tel
-                    st.session_state[adr_key]  = nouvelle_adresse
-                    st.session_state[site_key] = nouveau_site
-            
+                
                     st.success("📝 Informations mises à jour avec succès")
-            
+                
                     try:
                         if (nouveau_nom != ancien_nom) or (nouvelle_adresse != ancienne_adresse) or (nouveau_site != ancien_site) or (nouveau_tel != ancien_tel):
                             envoyer_email_smtp(
@@ -389,8 +383,9 @@ def render_fiche(row, key_prefix="list"):
                             )
                     except Exception as e:
                         st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
-            
+                
                     st.rerun()
+
 
 
 
