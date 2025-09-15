@@ -303,10 +303,12 @@ def render_fiche(row, key_prefix="list"):
                     upload_db_to_github()
             
                     # Discord au démarrage
-                    envoyer_notification_discord(
+                    notifier(
                         f"⏱️ **Compteur J+30 démarré** pour la fiche #{fiche_id} — **{row[2]}** ({row[1]}).\n"
-                        f"🗓️ Fin prévue le **{fin_str}**."
+                        f"🗓️ Fin prévue le **{fin_str}**.",
+                        subject=f"Démarrage compteur — Fiche #{fiche_id}"
                     )
+
             
                     st.success("🚀 Compteur de 30 jours démarré")
                     st.rerun()
