@@ -239,6 +239,8 @@ def render_fiche(row, key_prefix="list"):
             <p>📅 <b>Ajouté le :</b> {date_creation_str}</p>
             
             # === Bouton & décompteur J+30 ===
+            idx_done_nf = COLS.get("compteur_termine_notifie")
+            
             if not started_str:
                 if st.button("🔴 Démarrer le compteur (30 jours)", key=f"{key_prefix}_start_{fiche_id}", use_container_width=True):
                     start_today = datetime.now().strftime("%Y-%m-%d")
@@ -250,7 +252,7 @@ def render_fiche(row, key_prefix="list"):
                     conn.commit()
                     upload_db_to_github()
             
-                    # ✅ Notification Discord au démarrage
+                    # Discord au démarrage
                     envoyer_notification_discord(
                         f"⏱️ **Compteur J+30 démarré** pour la fiche #{fiche_id} — **{row[2]}** ({row[1]}).\n"
                         f"🗓️ Fin prévue le **{fin_str}**."
@@ -259,11 +261,25 @@ def render_fiche(row, key_prefix="list"):
                     st.success("🚀 Compteur de 30 jours démarré")
                     st.rerun()
             else:
+                # Calcul fin + jours restants (tu as déjà jours_restants/date_fin_compteur calculés plus haut)
                 fin_txt = date_en_fr(datetime.combine(date_fin_compteur, datetime.min.time())) if date_fin_compteur else "—"
                 restants = int(jours_restants) if jours_restants is not None else 30
                 percent_elapsed = int(round(((total_days - restants) / total_days) * 100)) if total_days else 0
+            
                 st.markdown(f"**⏳ Décompte : J-{restants}** (fin prévue le {fin_txt})")
                 st.progress(max(0, min(100, percent_elapsed)))
+            
+                # ✅ Notification auto quand J-0 atteint (une seule fois)
+                deja_notif_fin = False
+                if idx_done_nf is not None and len(row) > idx_done_nf and row[idx_done_nf] is not None:
+                    deja_notif_fin = (row[idx_done_nf] == 1)
+                if restants == 0 and not deja_notif_fin:
+                    envoyer_notification_discord(
+                        f"🏁 **Fiche #{fiche_id} — {row[2]} ({row[1]})** a atteint son terme **J+{total_days}** aujourd'hui."
+                    )
+                    cursor.execute("UPDATE fiches SET compteur_termine_notifie = 1 WHERE id = ?", (fiche_id,))
+                    conn.commit()
+                    upload_db_to_github()
 
         with col_sep:
             st.markdown("<div class='separator' style='height:400px; margin: 0 auto;'></div>", unsafe_allow_html=True)
