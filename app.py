@@ -412,9 +412,30 @@ def render_fiche(row, key_prefix="list"):
                     upload_db_to_github()
                 
                     st.success("📝 Informations mises à jour avec succès")
+
+                    
                 
+                    # --- Notif Discord sur changements précis ---
+                    changes = []
+                    if nouveau_nom != ancien_nom:
+                        changes.append(f"📄 Nom : {ancien_nom or '—'} → {nouveau_nom or '—'}")
+                    if nouvelle_adresse != ancienne_adresse:
+                        changes.append(f"📍 Adresse : {ancienne_adresse or '—'} → {nouvelle_adresse or '—'}")
+                    if nouveau_tel != ancien_tel:
+                        changes.append(f"📞 Téléphone : {ancien_tel or '—'} → {nouveau_tel or '—'}")
+                    if nouveau_site != ancien_site:
+                        changes.append(f"🌐 Site web : {ancien_site or '—'} → {nouveau_site or '—'}")
+                    
+                    if changes:
+                        # ✅ Discord : message détaillé par champ
+                        envoyer_notification_discord(
+                            "✏️ **Modification de fiche** "
+                            f"#{fiche_id} — **{ancien_nom}** ({row[1]})\n" + "\n".join(changes)
+                        )
+                    
+                    # (Garde ton envoi email actuel si tu veux)
                     try:
-                        if (nouveau_nom != ancien_nom) or (nouvelle_adresse != ancienne_adresse) or (nouveau_site != ancien_site) or (nouveau_tel != ancien_tel):
+                        if changes:
                             envoyer_email_smtp(
                                 host="smtp.hostinger.com",
                                 port=465,
@@ -422,15 +443,11 @@ def render_fiche(row, key_prefix="list"):
                                 mot_de_passe=os.environ.get("SMTP_PASSWORD"),
                                 destinataire="lucaswebsite28@gmail.com",
                                 sujet=f"🔔 Modification fiche client : {nom_client}",
-                                message=(
-                                    f"📄 Nom : {ancien_nom} → {nouveau_nom}\n"
-                                    f"📍 Adresse : {ancienne_adresse} → {nouvelle_adresse}\n"
-                                    f"📞 Téléphone : {ancien_tel} → {nouveau_tel}\n"
-                                    f"🌐 Site web : {ancien_site or '—'} → {nouveau_site or '—'}"
-                                )
+                                message="\n".join(changes)
                             )
                     except Exception as e:
                         st.warning(f"⚠️ Erreur lors de l'envoi de l'email : {e}")
+
                 
                     st.rerun()
 
